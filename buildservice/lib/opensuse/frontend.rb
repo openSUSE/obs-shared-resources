@@ -157,7 +157,7 @@ module Suse
     def do_put( data, path )
       begin
         path = URI.escape( path )
-        STDERR.puts "The encoded URI: #{path}"
+        #STDERR.puts "The encoded URI: #{path}"
         response = @http.start do |http|
           http.put path, data, http_header
         end
