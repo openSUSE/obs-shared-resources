@@ -211,7 +211,7 @@ module Suse
 
     def wrap_xml( opt={} )
       opt[:summary] ||= "Error parsing the error document, original document attached"
-      opt[:code] ||= 42
+      opt[:code] ||= 500
       opt[:content] ||= ""
 
       error = <<-END_ERROR
