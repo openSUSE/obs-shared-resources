@@ -14,6 +14,7 @@ task :update_changelog, :roles => [:db, :web, :app] do
     raise "Changelog is dirty, please check in and/or resolve conflicts"
   end
 
+  changelog = changelog_entry( self )
 
   puts "Appending changelog..."
   File.open('Changelog', 'a') do |f|
@@ -23,15 +24,12 @@ task :update_changelog, :roles => [:db, :web, :app] do
   puts "Checking in changelog..."
   `svn ci -m "automated changelog update" Changelog`
 
-  if( cl_do_branch )
-    puts "Branching to branch: #{branch_url}"
-    `svn copy #{repository} #{branch_url} -m 'automated deploy branch'`
-  end
-  
+  puts "Branching to branch: #{cl_branch_url}"
+  `svn copy #{repository} #{cl_branch_url} -m 'automated deploy branch'`
   
   subject = "[deploy] #{application} update from rev #{server_rev(self)} to rev #{head_rev(self)}"
-  from = clmail_from
-  to = clmail_to
+  from = cl_mail_from
+  to = cl_mail_to
 
   body = <<-END
 From: #{from}
@@ -42,7 +40,7 @@ Content-Type: text/plain
 [Automated Mail]
 
 User #{svnuser} deployed #{application}.
-A branch of revision #{head_rev(self)} has been created at #{branch_url}
+A branch of revision #{head_rev(self)} has been created at #{cl_branch_url}
 
 Changelog:
 
