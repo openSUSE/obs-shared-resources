@@ -1,40 +1,106 @@
+desc "update the Changelog file from svn log entries, check in the changelog, branch"
+task :update_changelog, :roles => [:db, :web, :app] do
+  require 'rexml/document'
+  require 'net/smtp'
 
-desc <<-DESC
-Rewritten update_code using svn on deploy machine, not server
-DESC
-task :update_code, :roles => [:app, :db, :web] do
-  on_rollback { delete release_path, :recursive => true }
+  server_rev(self)
+  #check if changelog has local changes
+  puts "Checking changelog status..."
+  changelog_status = `svn status -u Changelog`.split("\n")
+  if changelog_status.length > 1
+    puts "-"*72
+    puts changelog_status[0]
+    puts "-"*72
+    raise "Changelog is dirty, please check in and/or resolve conflicts"
+  end
 
-  require 'tmpdir'
+
+  puts "Appending changelog..."
+  File.open('Changelog', 'a') do |f|
+    f.print "#{changelog}\n"
+  end
+
+  puts "Checking in changelog..."
+  `svn ci -m "automated changelog update" Changelog`
+
+  if( cl_do_branch )
+    puts "Branching to branch: #{branch_url}"
+    `svn copy #{repository} #{branch_url} -m 'automated deploy branch'`
+  end
   
-  svntmpdir = "#{Dir.tmpdir}/switchtower-svn-tmp-#{$$}"
-  tarfile_local = "#{application}.tar.gz"
-  tarfile_remote = "#{deploy_to}/#{tarfile_local}"
-  scptarget = "#{user}@buildserviceapi:#{tarfile_remote}"
   
-  system <<-CMD
-    rm -rf #{svntmpdir}
-    mkdir -v #{svntmpdir}
-    cd #{svntmpdir}
-    echo "Checking out from #{repository}..."
-    svn co -q #{repository} #{svntmpdir}
-    echo "Tarring archive at #{svntmpdir}"
-    cd #{application}
-    tar zcf ../#{tarfile_local} *
-    scp ../#{tarfile_local} #{scptarget}
-  CMD
+  subject = "[deploy] #{application} update from rev #{server_rev(self)} to rev #{head_rev(self)}"
+  from = clmail_from
+  to = clmail_to
 
-  run <<-CMD
-    mkdir -v #{release_path} &&
-    tar -z -x -f #{tarfile_remote} -C #{release_path} &&
-    rm -vf #{tarfile_remote} &&
-    rm -rf #{release_path}/log #{release_path}/public/system &&
-    ln -nfs #{shared_path}/log #{release_path}/log &&
-    ln -nfs #{shared_path}/system #{release_path}/public/system
-  CMD
+  body = <<-END
+From: #{from}
+To: #{to.to_a.join(", ")}
+Subject: #{subject}
+Content-Type: text/plain
 
-  system <<-END
-    echo "Removing #{svntmpdir}"
-    rm -rf #{svntmpdir}
-  END
+[Automated Mail]
+
+User #{svnuser} deployed #{application}.
+A branch of revision #{head_rev(self)} has been created at #{branch_url}
+
+Changelog:
+
+#{changelog}
+------------------------------------------------------------------------
+END
+
+  puts "Mailing changelog..."
+  Net::SMTP.start('relay.suse.de', 25) do |smtp|
+    smtp.send_message body, from, to
+  end
+end
+
+desc "show the changelog entry that would be generated on an deploy"
+task :show_changelog, :roles => :web do
+  puts changelog_entry( self )
+end
+
+def changelog_entry( actor )
+  return $opensuse_changelog_entry unless $opensuse_changelog_entry.nil?
+  
+  puts "Retrieving log..."
+  log_xml_str = `svn log -r#{server_rev(actor)+1}:HEAD --xml`
+
+  log_xml_doc = REXML::Document.new( log_xml_str )
+
+  changelog = String.new
+  changelog << "-"*72+"\n"
+  changelog << "#{Time.now} - #{svnuser}\n\n"
+  changelog << "- update from svn revision #{server_rev(actor)} to #{head_rev(actor)}\n"
+
+  log_xml_doc.root.elements.each('logentry') do |logentry|
+    msg = logentry.elements['msg'].text
+    next if msg =~ /^automated changelog update/
+    
+    author = logentry.elements['author'].text
+    rev = logentry.attributes['revision']
+    
+    #msg << "[rev #{rev} #{author}]"
+    msg << "\n" unless msg[-1,1] == "\n"
+    
+    unless msg =~ /^-/
+      msg.sub!( /^/, "- " )
+    end
+    msg.gsub!( /^([^- ])/m, '  \1' )
+
+    changelog << msg
+  end
+  changelog << "\n"
+  $opensuse_changelog_entry = changelog
+end
+
+def server_rev( actor )
+  return $opensuse_server_rev unless $opensuse_server_rev.nil?
+  return $opensuse_server_rev = actor.source.current_revision(actor)
+end
+
+def head_rev( actor )
+  return $opensuse_head_rev unless $opensuse_head_rev.nil?
+  return $opensuse_head_rev = `svn info -rHEAD|grep Revision|awk '{print $2}'`.chomp.to_i
 end
