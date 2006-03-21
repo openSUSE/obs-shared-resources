@@ -15,8 +15,8 @@ set :repository, proc {"--username #{svnuser} https://forgesvn1.novell.com/svn/o
 set :cl_mail_from, "deploy-noreply@opensuse.org"
 
 # recipients of the changelog mail (string or array of strings)
-set :cl_mail_to, ["abauer@suse.de", "cschum@suse.de", "freitag@suse.de", "cwh@suse.de"]
-#set :cl_mail_to, "opensuse-commit@opensuse.org"
+#set :cl_mail_to, ["abauer@suse.de", "cschum@suse.de", "freitag@suse.de", "cwh@suse.de"]
+set :cl_mail_to, "opensuse-commit@opensuse.org"
 
 # target url for the branch
 set :cl_branch_url, proc {"https://forgesvn1.novell.com/svn/opensuse/branches/deploy/#{application}/#{File.basename release_path}"}
