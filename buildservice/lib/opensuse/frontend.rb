@@ -205,7 +205,9 @@ module Suse
         logger.debug "Suse::Frontend: parse exception when creating error doc"
         error_doc = wrap_xml( :content => content )
       end
-      error_doc = wrap_xml( :content => content ) if error_doc.root.nil? or error_doc.root.name != 'error'
+      if error_doc.root.nil? or not %w|error status|.include? error_doc.root.name
+        error_doc = wrap_xml( :content => content ) 
+      end
       error_doc
     end
 
