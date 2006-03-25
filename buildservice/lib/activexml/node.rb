@@ -9,6 +9,21 @@ module ActiveXML
     # even if the implementations are unoptimized, so that the specialized adapters
     # can be implemented with low effort.
     class AbstractAdapter
+      def has_element?( name )
+      end
+
+      def append_node( node )
+      end
+      alias_method '<<', :append_node
+
+      def add_node_after( node, prev_name )
+      end
+
+      def add_node_before( node, succ_name )
+      end
+
+      def remove_node( node )
+      end
     end
 
     class RexmlTreeAdapter < AbstractAdapter

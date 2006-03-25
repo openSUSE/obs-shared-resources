@@ -7,19 +7,35 @@ module ActiveXML
 
   class Base < Node
     class << self #class methods
+
+      #transport object, gets defined according to configuration when Base is subclassed
+      attr_reader :transport
+      
+      def inherited( subclass )
+        # called when a subclass is defined
+        logger.debug "initializing model #{subclass}"
+
+        # setup transport object for this model
+        subclass.instance_variable_set "@transport", config.transport_for(subclass.name.downcase.to_sym)
+      end
+      private :inherited
+
       def setup(transport_object)
         super()
+
         @@transport = transport_object
         logger.debug "--> ActiveXML successfully set up"
         true
       end
 
       def belongs_to(*tag_list)
+        logger.debug "belongs_to #{tag_list.inspect}"
         @rel_belongs_to ||= Array.new
         @rel_belongs_to.concat(tag_list).uniq!
       end
 
       def has_many(*tag_list)
+        logger.debug "has_many #{tag_list.inspect}"
         @rel_has_many ||= Array.new
         @rel_has_many.concat(tag_list).uniq!
       end
