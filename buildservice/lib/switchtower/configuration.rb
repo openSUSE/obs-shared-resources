@@ -31,6 +31,7 @@ role :db,  "buildserviceapi.suse.de"
 
 # deploy target directory
 set :deploy_to, proc {"/srv/www/opensuse/#{application}"}
+set :stage_deploy_to, proc {"/srv/www/opensuse_stage/#{application}"}
 
 # user for ssh operations
 set :user, "opensuse"

@@ -59,6 +59,29 @@ task :show_changelog, :roles => :web do
   puts changelog_entry( self )
 end
 
+desc "deploy current revision into staging area"
+task :deploy_stage, :roles => [:web, :app, :db] do
+  set :deploy_to, stage_deploy_to
+  
+  # FIXME: hack: undefine after_update_code handler (changelog sending) for stage
+  class << self
+    def update_changelog; end
+  end
+
+  transaction do
+    update_code
+    symlink
+  end
+end
+
+desc "set up application structure on staging servers"
+task :setup_stage, :roles => [:web, :app, :db] do
+  set :deploy_to, stage_deploy_to
+  setup
+end
+
+### helper methods
+
 def changelog_entry( actor )
   return $opensuse_changelog_entry unless $opensuse_changelog_entry.nil?
   
