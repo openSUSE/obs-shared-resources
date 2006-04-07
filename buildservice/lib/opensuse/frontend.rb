@@ -234,17 +234,24 @@ module Suse
         'Accept'        => 'text/xml; charset=utf-8'
       }
       if cred[:login] and cred[:passwd]
+        logger.debug "Transport: Transmitting base auth"
         header['Authorization' ] = base64_auth_string
+      elsif cred[:ichain_user]
+        logger.debug "Transport: Transmitting iChain user"
+        header['X-username'] = cred[:ichain_user] 
       end
       header
     end
 
     #returns hash with :user and :pass fields or nil
     def get_credentials
-
       return {} if @cred_proc.nil?
       cred = @cred_proc.call
-      {:login => cred[0], :passwd => cred[1]}
+      if cred.size() == 2
+        {:login => cred[0], :passwd => cred[1]}
+      elsif cred.size() == 1
+        { :ichain_user => cred[0] }
+      end
     end
 
     #returns base64 encoded auth string for use for basic auth in http header
