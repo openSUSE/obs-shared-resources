@@ -16,7 +16,7 @@ module ActiveXML
         logger.debug "initializing model #{subclass}"
 
         # setup transport object for this model
-        subclass.instance_variable_set "@transport", config.transport_for(subclass.name.downcase.to_sym)
+#        subclass.instance_variable_set "@transport", config.transport_for(subclass.name.downcase.to_sym)
       end
       private :inherited
 
