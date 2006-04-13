@@ -6,6 +6,7 @@ module ActiveXML
     DEFAULTS = Hash.new
     DEFAULTS[:xml_backend] = "rexml"
     DEFAULTS[:transport_plugins] = "rest"
+    DEFAULTS[:use_transport_plugins] = false
 
     def self.append_features(base)
       super
@@ -97,6 +98,7 @@ module ActiveXML
         end
 
         def transport_for( model )
+          @transports ||= Hash.new
           @transports[model]
         end
       end
@@ -117,7 +119,7 @@ module ActiveXML
       
       def method_missing( sym, *args ) #:nodoc:
         attr_name = sym.to_s =~ /=$/ ? sym.to_s.sub(/.$/, '').to_sym : sym
-        if DEFAULTS[attr_name]
+        if DEFAULTS.has_key? attr_name
           @config ||= Hash.new
           add_config_accessor(attr_name) unless self.respond_to? attr_name
           __send__( sym, *args )

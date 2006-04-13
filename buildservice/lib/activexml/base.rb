@@ -1,4 +1,5 @@
 require 'activexml/node'
+require 'opensuse/frontend'
 
 module ActiveXML
   class GeneralError < StandardError; end
@@ -16,7 +17,7 @@ module ActiveXML
         logger.debug "initializing model #{subclass}"
 
         # setup transport object for this model
-#        subclass.instance_variable_set "@transport", config.transport_for(subclass.name.downcase.to_sym)
+        subclass.instance_variable_set "@transport", config.transport_for(subclass.name.downcase.to_sym)
       end
       private :inherited
 
@@ -59,33 +60,39 @@ module ActiveXML
         #STDERR.puts "find opts: #{opt.inspect}, wanted_name: #{wanted_name}"
         
         begin
-          if self.name == "Result"
-            data = @@transport.get_result( opt )
-          elsif self.name == "Platform"
-            case opt.class.name
-            when /Symbol/
-              throw "Illegal Symbol in find parameters: need ':all'" if opt != :all
-              data = @@transport.get_platform
-            when /Hash/
-              opt[self.name.downcase.to_sym] = wanted_name if wanted_name
-              data = @@transport.get_platform( opt )
-            else
-              throw "Illegal parameters for find: need Symbol ':all' or Hash"
-            end
-          elsif self.name == "Person"
-            data = @@transport.get_user( opt )
+          if ActiveXML::Config.use_transport_plugins
+            raise "No transport defined for model #{self.name}" unless transport
+            data = transport.find( opt )
           else
-            case opt.class.name
-            when /Symbol/
-              throw "Illegal Symbol in find parameters: need ':all'" if opt != :all
-              data = @@transport.get_source
-            when /Hash/
-              opt[self.name.downcase.to_sym] = wanted_name if wanted_name
-              data = @@transport.get_meta( opt )
+            if self.name == "Result"
+              data = @@transport.get_result( opt )
+            elsif self.name == "Platform"
+              case opt.class.name
+              when /Symbol/
+                throw "Illegal Symbol in find parameters: need ':all'" if opt != :all
+                data = @@transport.get_platform
+              when /Hash/
+                opt[self.name.downcase.to_sym] = wanted_name if wanted_name
+                data = @@transport.get_platform( opt )
+              else
+                throw "Illegal parameters for find: need Symbol ':all' or Hash"
+              end
+            elsif self.name == "Person"
+              data = @@transport.get_user( opt )
             else
-              throw "Illegal parameters for find: need Symbol ':all' or Hash"
+              case opt.class.name
+              when /Symbol/
+                throw "Illegal Symbol in find parameters: need ':all'" if opt != :all
+                data = @@transport.get_source
+              when /Hash/
+                opt[self.name.downcase.to_sym] = wanted_name if wanted_name
+                data = @@transport.get_meta( opt )
+              else
+                throw "Illegal parameters for find: need Symbol ':all' or Hash"
+              end
             end
           end
+
           data_doc = REXML::Document.new( data ).root
           logger.debug "DATA #{data}"
         rescue Suse::Frontend::UnspecifiedError

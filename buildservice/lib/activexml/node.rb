@@ -47,7 +47,7 @@ module ActiveXML
         # axbase_subclasses = ActiveXML::Base.subclasses.map {|sc| sc.downcase}
         # if axbase_subclasses.include?( element_name )
         
-        if %w{package project result person platform}.include?( element_name )
+        if %w{package project result person platform}.include?( element_name ) && Object.const_defined?( element_name.capitalize )
           return Object.const_get( element_name.capitalize )
         end
         return ActiveXML::Node
