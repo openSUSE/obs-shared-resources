@@ -79,6 +79,8 @@ module ActiveXML
               end
             elsif self.name == "Person"
               data = @@transport.get_user( opt )
+            elsif self.name == "Directory"
+              data = @@transport.get_source( opt )
             else
               case opt.class.name
               when /Symbol/
