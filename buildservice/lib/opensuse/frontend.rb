@@ -117,6 +117,12 @@ module Suse
       do_put( data, path )
     end
 
+    def delete_file( opt={} )
+      path = "/source/#{opt[:project]}/#{opt[:package]}/#{opt[:filename]}"
+
+      do_delete( path )
+    end
+
     def put_user( data, opt={} )
       path = "/person/#{opt[:login]}"
 
@@ -146,6 +152,18 @@ module Suse
       begin
         response = @http.start do |http|
           http.get path, http_header
+        end
+
+        handle_response( response )
+      rescue SystemCallError => err
+        raise ConnectionError, wrap_xml( :summary => err.to_s )
+      end
+    end
+    
+    def do_delete( path )
+      begin
+        response = @http.start do |http|
+          http.delete path, http_header
         end
 
         handle_response( response )
