@@ -81,6 +81,8 @@ module ActiveXML
               data = @@transport.get_user( opt )
             elsif self.name == "Directory"
               data = @@transport.get_source( opt )
+            elsif self.name == "Link"
+              data = @@transport.get_link( opt )
             else
               case opt.class.name
               when /Symbol/
@@ -153,6 +155,11 @@ module ActiveXML
         put_opt[:platform] = self.name
         put_opt[:project] = self.project
         @@transport.put_platform @data.to_s, put_opt
+      elsif self.class.name == "Link"
+        put_opt[:project] = self.project
+        put_opt[:package] = self.package
+        put_opt[:filename] = "_link"
+        @@transport.put_file @data.to_s, put_opt
       else
         put_opt[self.class.name.downcase.to_sym] = self.name
 

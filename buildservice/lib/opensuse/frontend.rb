@@ -72,6 +72,16 @@ module Suse
       do_get( path )
     end
 
+    def get_link( opt={} )
+      logger.debug "--> get_link: #{opt.inspect}"
+      path = '/source'
+      path += "/#{opt[:project]}"
+      path += "/#{opt[:package]}"
+      path += "/_link"
+      logger.debug "--> get_link path: #{path}"
+      do_get( path )
+    end
+
     def get_result( opt={} )
       logger.debug "--> get_result: #{opt.inspect}"
       path = '/result/'
@@ -112,6 +122,7 @@ module Suse
     end
 
     def put_file( data, opt={} )
+      logger.debug "--> put_file: #{opt.inspect}"
       path = "/source/#{opt[:project]}/#{opt[:package]}/#{opt[:filename]}"
 
       do_put( data, path )
