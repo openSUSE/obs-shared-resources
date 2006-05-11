@@ -37,7 +37,7 @@ module ActiveXML
     class << self
 
       def setup
-        @@logger = RAILS_DEFAULT_LOGGER
+        @@logger = ActiveXML::Config.logger
       end
 
       def get_class(element_name)
@@ -54,16 +54,18 @@ module ActiveXML
       end
 
       #creates an empty xml document
-      def make_stub(name)
-        logger.debug "--> creating stub element for #{self.name}, name is: #{name}"
-        if name.nil?
-          raise CreationError, "Tried to create document without name parameter"
+      # FIXME: works only for projects/packages, or by overwriting it in the model definition
+      # FIXME: could get info somehow from schema, as soon as schema evaluation is built in
+      def make_stub(opt)
+        logger.debug "--> creating stub element for #{self.name}, arguments: #{opt.inspect}"
+        if opt.nil?
+          raise CreationError, "Tried to create document without opt parameter"
         end
         root_tag_name = self.name.downcase
         doc = REXML::Document.new
         root = REXML::Element.new root_tag_name
         doc.add_element root
-        root.add_attribute 'name', name
+        root.add_attribute 'name', opt[:name]
         root.add_element REXML::Element.new('title')
         root.add_element REXML::Element.new('description')
 
@@ -71,7 +73,7 @@ module ActiveXML
       end
 
       def logger
-        @@logger
+        ActiveXML::Config.logger
       end
     end
 
@@ -87,7 +89,7 @@ module ActiveXML
         @data = REXML::Document.new( data ).root
       elsif data.kind_of? Hash
         #create new
-        @data = self.class.make_stub(data[:name])
+        @data = self.class.make_stub(data)
       else
         raise "constructor needs either REXML::Element, String or Hash"
       end
@@ -114,7 +116,7 @@ module ActiveXML
     #private :define_iterator_for_element
 
     def logger
-      @@logger
+      self.class.logger
     end
 
     def to_s

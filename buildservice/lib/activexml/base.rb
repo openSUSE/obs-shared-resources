@@ -7,6 +7,8 @@ module ActiveXML
   class CreationError < GeneralError; end
 
   class Base < Node
+    @default_find_parameter = :name
+
     class << self #class methods
 
       #transport object, gets defined according to configuration when Base is subclassed
@@ -18,8 +20,15 @@ module ActiveXML
 
         # setup transport object for this model
         subclass.instance_variable_set "@transport", config.transport_for(subclass.name.downcase.to_sym)
+        subclass.instance_variable_set "@default_find_parameter", @default_find_parameter
       end
       private :inherited
+
+      # setup the default parameter for find calls. If the first parameter to <Model>.find is a string,
+      # the value of this string is used as value f
+      def default_find_parameter( sym )
+        @default_find_parameter = sym
+      end
 
       def setup(transport_object)
         super()
@@ -49,92 +58,46 @@ module ActiveXML
         #FIXME: needs cleanup
         #TODO: factor out xml stuff to ActiveXML::Node
         logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} )"
-        if( args[0].kind_of? String )
-          wanted_name = args.shift
-          logger.debug "find: restrict to name: #{wanted_name}, object: #{self.name}"
-        else
-          wanted_name = nil
-        end
 
-        opt = args.shift || {}
-        #STDERR.puts "find opts: #{opt.inspect}, wanted_name: #{wanted_name}"
+        args[1] ||= {}
+        opt = args[0].kind_of?(Hash) ? args[0] : args[1]
+        opt[@default_find_parameter] = args[0] if( args[0].kind_of? String )
+
+        STDERR.puts "prepared find args: #{args.inspect}"
         
-        begin
-          if ActiveXML::Config.use_transport_plugins
-            raise "No transport defined for model #{self.name}" unless transport
-            data = transport.find( opt )
-          else
-            if self.name == "Result"
-              data = @@transport.get_result( opt )
-            elsif self.name == "Platform"
-              case opt.class.name
-              when /Symbol/
-                throw "Illegal Symbol in find parameters: need ':all'" if opt != :all
-                data = @@transport.get_platform
-              when /Hash/
-                opt[self.name.downcase.to_sym] = wanted_name if wanted_name
-                data = @@transport.get_platform( opt )
-              else
-                throw "Illegal parameters for find: need Symbol ':all' or Hash"
-              end
-            elsif self.name == "Person"
-              data = @@transport.get_user( opt )
-            elsif self.name == "Directory"
-              data = @@transport.get_source( opt )
-            elsif self.name == "Link"
-              data = @@transport.get_link( opt )
-            else
-              case opt.class.name
-              when /Symbol/
-                throw "Illegal Symbol in find parameters: need ':all'" if opt != :all
-                data = @@transport.get_source
-              when /Hash/
-                opt[self.name.downcase.to_sym] = wanted_name if wanted_name
-                data = @@transport.get_meta( opt )
-              else
-                throw "Illegal parameters for find: need Symbol ':all' or Hash"
-              end
-            end
-          end
-
-          data_doc = REXML::Document.new( data ).root
-          logger.debug "DATA #{data}"
-        rescue Suse::Frontend::UnspecifiedError
-          raise NotFoundError, $!.message
-        end
+        raise "No transport defined for model #{self.name}" unless transport
+        transport.find( self, *args )
+        
+=begin
+        data_doc = REXML::Document.new( data ).root
+        logger.debug "DATA #{data}"
 
         if( %w{projectlist packagelist platforms directory}.include? data_doc.name )
-          is_collection = true
           result = []
           data_doc.elements.each do |e|
-            if( wanted_name )
-              logger.debug "find: trying to find #{self.name} with name #{wanted_name}"
-              logger.debug "find: current name: #{e.attributes['name']}"
-              next unless e.attributes['name'] == wanted_name
-              logger.debug "find: found it"
-              result = self.new(e, opt)
-              break
-            end
             result << self.new(e, opt)
           end
         else
           result = self.new(data_doc, opt)
         end
-
         result
+=end
       end
     end #class methods
 
     def initialize( data, opt={} )
       super(data)
       opt = data if data.kind_of? Hash and opt.empty?
+
+      @init_options = opt
+      
       #FIXME: hack
-      if( rel = self.class.instance_variable_get("@rel_belongs_to") )
-        rel.each do |var|
-          raise "relation parameter not specified (was looking for #{var.inspect})" unless opt[var]
-          self.instance_variable_set( "@#{var}", opt[var] )
-        end
-      end
+      #if( rel = self.class.instance_variable_get("@rel_belongs_to") )
+      #  rel.each do |var|
+      #    raise "relation parameter not specified (was looking for #{var.inspect})" unless opt[var]
+      #  self.instance_variable_set( "@#{var}", opt[var] )
+      #  end
+      #end
     end
 
     def name
@@ -147,32 +110,29 @@ module ActiveXML
       logger.debug "XML #{@data}"
 
       put_opt = {}
-      
-      if self.class.name == "Person"
-        put_opt[:login] = self.login
-        @@transport.put_user @data.to_s, put_opt
-      elsif self.class.name == "Platform"
-        put_opt[:platform] = self.name
-        put_opt[:project] = self.project
-        @@transport.put_platform @data.to_s, put_opt
-      elsif self.class.name == "Link"
-        put_opt[:project] = self.project
-        put_opt[:package] = self.package
-        put_opt[:filename] = "_link"
-        @@transport.put_file @data.to_s, put_opt
-      else
-        put_opt[self.class.name.downcase.to_sym] = self.name
+     
+      self.class.transport.save self
 
-        #FIXME: slightly less hackish, at least the interface is right. nevertheless still a hack
-        if( rel = self.class.instance_variable_get( "@rel_belongs_to" ) )
-          rel.each do |var|
-            put_opt[var] = instance_variable_get( "@#{var}" )
-          end
-        end
+      #if self.class.name == "Person"
+      #  put_opt[:login] = self.login
+      #  @@transport.put_user @data.to_s, put_opt
+      #elsif self.class.name == "Platform"
+      #  put_opt[:platform] = self.name
+      #  put_opt[:project] = self.project
+      #  @@transport.put_platform @data.to_s, put_opt
+      #else
+      #  put_opt[self.class.name.downcase.to_sym] = self.name
+      #
+      #  #FIXME: slightly less hackish, at least the interface is right. nevertheless still a hack
+      #  if( rel = self.class.instance_variable_get( "@rel_belongs_to" ) )
+      #    rel.each do |var|
+      #      put_opt[var] = instance_variable_get( "@#{var}" )
+      #    end
+      #  end
 
-        @@transport.put_meta @data.to_s, put_opt
-      end
-      true
+      #  @@transport.put_meta @data.to_s, put_opt
+      #end
+      return true
     end
   end
 end

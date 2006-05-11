@@ -37,9 +37,28 @@ module ActiveXML
     end
     
     class TransportMap
+
+      # stores the default server for a specific protocol
+      # example:
+      # @default_servers[:rest] = "localhost:3001"
+      @default_servers = Hash.new
+
+      # maps transport classes to protocol names
+      # example:
+      # @transport_class_map[:rest] = ActiveXML::Transport::Rest
+      @transport_class_map = Hash.new
+
+      # stores instanced transport objects per model
+      @transport_obj_map = Hash.new
+
+      # stores mapping information
+      # key: symbolified model name
+      # value: hash with keys :target_uri and :opt (arguments to connect method)
+      @mapping = Hash.new
+
       class << self
         def logger
-          RAILS_DEFAULT_LOGGER
+          ActiveXML::Config.logger
         end
         
         def default_server( transport, location )
@@ -54,13 +73,11 @@ module ActiveXML
             replace_server_if_needed( opt[:all] )
           end
           
-          @transports ||= Hash.new
-          
           logger.debug "setting up transport for model #{model}"
           uri = URI( target )
-          @transports[model] = transport = spawn_transport( uri.scheme, opt )
+          @transport_obj_map[model] = transport = spawn_transport( uri.scheme, opt )
           replace_server_if_needed( uri )
-          transport.target_uri = uri
+          @mapping[model] = {:target_uri => uri, :opt => opt}
         end
 
         def replace_server_if_needed( uri )
@@ -72,15 +89,15 @@ module ActiveXML
         end
 
         def spawn_transport( transport, opt={} )
-          if @protocols and @protocols.has_key? transport.to_s
-            @protocols[transport.to_s].new( opt )
+          if @transport_class_map and @transport_class_map.has_key? transport.to_s
+            @transport_class_map[transport.to_s].spawn( transport, opt )
           else
             raise "Unable to spawn transport object for transport '#{transport}'"
           end
         end
 
         def get_default_server( transport )
-          ds = @default_servers[transport]
+          ds = @default_servers[transport.to_s]
           if ds =~ /(.*?):(.*)/
             return $1, $2.to_i
           else
@@ -89,27 +106,71 @@ module ActiveXML
         end
 
         def register_transport( klass, proto )
-          @protocols ||= Hash.new
-          if @protocols.has_key? proto
+          @transport_class_map ||= Hash.new
+          if @transport_class_map.has_key? proto
             #raise "Transport for protocol '#{proto}' already registered"
           else
-            @protocols[proto] = klass
+            @transport_class_map[proto] = klass
           end
         end
 
         def transport_for( model )
-          @transports ||= Hash.new
-          @transports[model]
+          @transport_obj_map ||= Hash.new
+          @transport_obj_map[model]
+        end
+
+        def target_for( model )
+          logger.debug "retrieving target_uri for model '#{model.inspect}'"
+          raise "Model #{model.inspect} is not configured" if not @mapping.has_key? model
+          @mapping[model][:target_uri]
+        end
+
+        def options_for( model )
+          logger.debug "retrieving option hash for model '#{model.inspect}'"
+          @mapping[model][:opt]
+        end
+
+        def debug_dump
+          require 'pp'
+          pp @default_servers
+
+          pp @transport_class_map
+
+          pp @transport_obj_map
+ 
+          pp @mapping
         end
       end
     end
 
     class << self
+      
+      # access the logger object. All ActiveXML modules should use this method
+      # instead of using RAILS_DEFAULT_LOGGER to remain independent of rails
+      def logger
+        @log_obj || RAILS_DEFAULT_LOGGER
+      end
+
+      # defines the logger object used throughout ActiveXML modules
+      def logger=( log_obj )
+        @log_obj = log_obj
+      end
+
+      def debug_dump
+        puts "config data:"
+        @config.each do |k,v|
+          puts "#{k}: #{v}"
+        end unless @config.nil?
+        puts "Transport Map:"
+        TransportMap.debug_dump
+      end
+      
       def setup_transport
         yield TransportMap
       end
 
       def transport_for( model )
+        
         TransportMap.transport_for model
       end
 

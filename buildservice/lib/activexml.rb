@@ -5,7 +5,7 @@ rescue LoadError
   require_gem 'activesupport'
 end
 
-require_dependency 'activexml/config'
+require 'activexml/config'
 require_dependency 'activexml/node'
 require_dependency 'activexml/base'
 require_dependency 'activexml/transport'
