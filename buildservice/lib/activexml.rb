@@ -6,9 +6,9 @@ rescue LoadError
 end
 
 require 'activexml/config'
-require_dependency 'activexml/node'
-require_dependency 'activexml/base'
-require_dependency 'activexml/transport'
+require 'activexml/node'
+require 'activexml/base'
+require 'activexml/transport'
 
 ActiveXML::Base.class_eval do
   include ActiveXML::Config

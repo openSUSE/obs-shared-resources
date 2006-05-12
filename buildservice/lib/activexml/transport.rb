@@ -37,6 +37,9 @@ module ActiveXML
       def find( *args )
       end
 
+      def save
+      end
+
       def login( user, password )
       end
 
@@ -45,9 +48,7 @@ module ActiveXML
       end
     end
 
-    
     #TODO: put lots of stuff into base class
-
     require 'base64'
     class Rest < Abstract
       register_protocol 'rest'
@@ -147,7 +148,9 @@ module ActiveXML
       #replaces the parameter parts in the uri from the config file with the correct values
       def substitute_uri( uri, params )
         u = uri.clone
+        u.scheme = "http"
         u.path = uri.path.split(/\//).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("/")
+        u.query = uri.query.split(/=/).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("=")
         u.path.gsub!(/\/+/, '/')
         return u
       end
@@ -164,7 +167,7 @@ module ActiveXML
         logger.debug "url: #{url}"
         begin
           response = Net::HTTP.start(url.host, url.port) do |http|
-            http.get url.path, @http_header
+            http.get url.path+'?'+url.query, @http_header
           end
         rescue SystemCallError => err
           raise ConnectionError, "Failed to establish connection: "+err.message
@@ -176,7 +179,7 @@ module ActiveXML
       def do_put( url, data )
         begin
           response = Net::HTTP.start(url.host, url.port) do |http|
-            http.put url.path, data, @http_header
+            http.put url.path+'?'+url.query, data, @http_header
           end
         rescue SystemCallError => err
           raise ConnectionError, "Failed to establish connection: "+err.message

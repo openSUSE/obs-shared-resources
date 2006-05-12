@@ -98,6 +98,10 @@ module ActiveXML
       @node_cache = {}
     end
 
+    def element_name
+      @data.name
+    end
+
     def define_iterator_for_element( elem )
       logger.debug "2> starting to define iterator for element '#{elem}'"
 
@@ -176,12 +180,6 @@ module ActiveXML
       klass = self.class.get_class(element.name)
       opt = {}
       node = nil
-      if( self.kind_of? ActiveXML::Base and (rel = self.class.instance_variable_get('@rel_has_many')) )
-        if( rel.include? element.name.to_sym )
-          opt[self.class.name.downcase.to_sym] = self.name
-          node = klass.new(element, opt)
-        end
-      end
       node ||= klass.new(element)
       #logger.debug "created node: #{node.inspect}"
       return node

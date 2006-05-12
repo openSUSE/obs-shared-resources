@@ -1,5 +1,5 @@
 require 'activexml/node'
-require 'opensuse/frontend'
+#require 'opensuse/frontend'
 
 module ActiveXML
   class GeneralError < StandardError; end
@@ -63,7 +63,7 @@ module ActiveXML
         opt = args[0].kind_of?(Hash) ? args[0] : args[1]
         opt[@default_find_parameter] = args[0] if( args[0].kind_of? String )
 
-        STDERR.puts "prepared find args: #{args.inspect}"
+        logger.debug "prepared find args: #{args.inspect}"
         
         raise "No transport defined for model #{self.name}" unless transport
         transport.find( self, *args )
