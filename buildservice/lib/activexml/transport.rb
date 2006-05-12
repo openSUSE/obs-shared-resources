@@ -6,6 +6,7 @@ module ActiveXML
     class Error < StandardError; end
     class ConnectionError < Error; end
     class UnauthorizedError < Error; end
+    class ForbiddenError < Error; end
     class NotFoundError < Error; end
 
     class Abstract
