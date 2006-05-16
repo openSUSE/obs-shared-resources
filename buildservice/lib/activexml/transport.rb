@@ -150,7 +150,9 @@ module ActiveXML
         u = uri.clone
         u.scheme = "http"
         u.path = uri.path.split(/\//).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("/")
-        u.query = uri.query.split(/=/).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("=")
+        if uri.query
+          u.query = uri.query.split(/=/).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("=")
+        end
         u.path.gsub!(/\/+/, '/')
         return u
       end
@@ -167,7 +169,11 @@ module ActiveXML
         logger.debug "url: #{url}"
         begin
           response = Net::HTTP.start(url.host, url.port) do |http|
-            http.get url.path+'?'+url.query, @http_header
+            path = url.path
+            if url.query
+              path + "?" + url.query
+            end
+            http.get path, @http_header
           end
         rescue SystemCallError => err
           raise ConnectionError, "Failed to establish connection: "+err.message
