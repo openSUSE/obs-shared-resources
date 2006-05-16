@@ -190,7 +190,12 @@ module ActiveXML
       def do_post( url, data )
         begin
           response = Net::HTTP.start(url.host, url.port) do |http|
-            http.post url.path, data, @http_header
+            logger.debug( "PATH: " + url.path + " QUERY: #{url.query}" )
+            path = url.path
+            if ( url.query )
+              path += "?" + url.query
+            end
+            http.post path, data, @http_header
           end
         rescue SystemCallError => err
           raise ConnectionError, "Failed to establish connection: "+err.message
