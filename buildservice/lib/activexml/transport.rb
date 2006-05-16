@@ -185,7 +185,11 @@ module ActiveXML
       def do_put( url, data )
         begin
           response = Net::HTTP.start(url.host, url.port) do |http|
-            http.put url.path+'?'+url.query, data, @http_header
+            path = url.path
+            if url.query
+              path + "?" + url.query
+            end
+            http.put path, data, @http_header
           end
         rescue SystemCallError => err
           raise ConnectionError, "Failed to establish connection: "+err.message
