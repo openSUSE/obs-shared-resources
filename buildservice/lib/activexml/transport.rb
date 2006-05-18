@@ -149,9 +149,9 @@ module ActiveXML
       def substitute_uri( uri, params )
         u = uri.clone
         u.scheme = "http"
-        u.path = uri.path.split(/\//).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("/")
+        u.path = URI.escape(uri.path.split(/\//).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("/"))
         if uri.query
-          u.query = uri.query.split(/=/).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("=")
+          u.query = URI.escape(uri.query.split(/=/).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("="))
         end
         u.path.gsub!(/\/+/, '/')
         return u
@@ -169,9 +169,9 @@ module ActiveXML
         logger.debug "url: #{url}"
         begin
           response = Net::HTTP.start(url.host, url.port) do |http|
-            path = url.path
+            path = URI.escape(url.path)
             if url.query
-              path + "?" + url.query
+              path + "?" + URI.escape(url.query)
             end
             http.get path, @http_header
           end
@@ -185,9 +185,9 @@ module ActiveXML
       def do_put( url, data )
         begin
           response = Net::HTTP.start(url.host, url.port) do |http|
-            path = url.path
+            path = URI.escape(url.path)
             if url.query
-              path + "?" + url.query
+              path + "?" + URI.escape(url.query)
             end
             http.put path, data, @http_header
           end
@@ -201,9 +201,9 @@ module ActiveXML
         begin
           response = Net::HTTP.start(url.host, url.port) do |http|
             logger.debug( "PATH: " + url.path + " QUERY: #{url.query}" )
-            path = url.path
+            path = URI.escape(url.path)
             if ( url.query )
-              path += "?" + url.query
+              path += "?" + URI.escape(url.query)
             end
             http.post path, data, @http_header
           end
