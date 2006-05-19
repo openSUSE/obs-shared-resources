@@ -80,7 +80,7 @@ module ActiveXML
     #instance methods
 
     attr_reader :data
-    attr_accessor :throw_on_method_missing
+    attr_accessor :throw_on_method_missing, :raw_data
     
     def initialize( data )
       if data.kind_of? REXML::Element
@@ -96,6 +96,14 @@ module ActiveXML
 
       @throw_on_method_missing = true
       @node_cache = {}
+    end
+
+    def raw_data=( data )
+      if data.kind_of? REXML::Element
+        @data = data.clone
+      else
+        @data = REXML::Document.new(data.to_str).root
+      end
     end
 
     def element_name

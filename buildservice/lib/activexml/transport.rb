@@ -107,7 +107,7 @@ module ActiveXML
         logger.debug "uri is: #{uri}"
         url = substitute_uri( uri, params )
 
-        obj = model.new( do_get( url ) )
+        obj = model.new( http_do( 'get', url ) )
         obj.instance_variable_set( '@init_options', params )
         return obj
       end
@@ -115,7 +115,7 @@ module ActiveXML
       def save( object )
         #url = object.instance_variable_get( '@axml_substituted_url' )
         url = substituted_uri_for( object )
-        do_put( url, object.dump_xml )
+        http_do 'put', url, object.dump_xml
       end
 
       def direct_http( url, opt={} )
@@ -131,18 +131,7 @@ module ActiveXML
 
         logger.debug "--> direct_http url: #{url.inspect}"
 
-        case opt[:method]
-        when /GET/
-          do_get( url )
-        when /PUT/
-          raise "PUT without data" unless opt.has_key? :data
-          do_put( url, opt[:data] )
-        when /POST/
-          raise "POST without data" unless opt.has_key? :data
-          do_post( url, opt[:data] )
-        else
-          raise "undefined http method '#{opt[:method]}'"
-        end
+        http_do opt[:method], url, opt[:data]
       end
 
       #replaces the parameter parts in the uri from the config file with the correct values
@@ -165,53 +154,37 @@ module ActiveXML
       end
       private :substituted_uri_for
 
-      def do_get( url )
-        logger.debug "url: #{url}"
+      def http_do( method, url, data=nil )
+        logger.debug "http_do: url: #{url}"
         begin
           response = Net::HTTP.start(url.host, url.port) do |http|
             path = URI.escape(url.path)
             if url.query
-              path + "?" + URI.escape(url.query)
-            end
-            http.get path, @http_header
-          end
-        rescue SystemCallError => err
-          raise ConnectionError, "Failed to establish connection: "+err.message
-        end
-        handle_response( response )
-      end
-      private :do_get
-
-      def do_put( url, data )
-        begin
-          response = Net::HTTP.start(url.host, url.port) do |http|
-            path = URI.escape(url.path)
-            if url.query
-              path + "?" + URI.escape(url.query)
-            end
-            http.put path, data, @http_header
-          end
-        rescue SystemCallError => err
-          raise ConnectionError, "Failed to establish connection: "+err.message
-        end
-        handle_response( response )
-      end
-
-      def do_post( url, data )
-        begin
-          response = Net::HTTP.start(url.host, url.port) do |http|
-            logger.debug( "PATH: " + url.path + " QUERY: #{url.query}" )
-            path = URI.escape(url.path)
-            if ( url.query )
               path += "?" + URI.escape(url.query)
             end
-            http.post path, data, @http_header
+            logger.debug "http_do: path: #{path}"
+
+            case method
+            when /get/i
+              http.get path, @http_header
+            when /put/i
+              raise "PUT without data" if data.nil?
+              http.put path, data, @http_header
+            when /post/i
+              raise "POST without data" if data.nil?
+              http.post path, data, @http_header
+            when /delete/i
+              http.delete path, @http_header
+            else
+              raise "unknown HTTP method: #{method.inspect}"
+            end
           end
         rescue SystemCallError => err
           raise ConnectionError, "Failed to establish connection: "+err.message
         end
         handle_response( response )
       end
+      private :http_do
 
       def handle_response( http_response )
         case http_response
