@@ -67,22 +67,8 @@ module ActiveXML
         
         raise "No transport defined for model #{self.name}" unless transport
         transport.find( self, *args )
-        
-=begin
-        data_doc = REXML::Document.new( data ).root
-        logger.debug "DATA #{data}"
-
-        if( %w{projectlist packagelist platforms directory}.include? data_doc.name )
-          result = []
-          data_doc.elements.each do |e|
-            result << self.new(e, opt)
-          end
-        else
-          result = self.new(data_doc, opt)
-        end
-        result
-=end
       end
+
     end #class methods
 
     def initialize( data, opt={} )
@@ -90,14 +76,6 @@ module ActiveXML
       opt = data if data.kind_of? Hash and opt.empty?
 
       @init_options = opt
-      
-      #FIXME: hack
-      #if( rel = self.class.instance_variable_get("@rel_belongs_to") )
-      #  rel.each do |var|
-      #    raise "relation parameter not specified (was looking for #{var.inspect})" unless opt[var]
-      #  self.instance_variable_set( "@#{var}", opt[var] )
-      #  end
-      #end
     end
 
     def name
