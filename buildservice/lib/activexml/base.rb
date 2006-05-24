@@ -84,32 +84,10 @@ module ActiveXML
 
     def save
       logger.debug "Save #{self.class}"
-
       logger.debug "XML #{@data}"
-
       put_opt = {}
      
       self.class.transport.save self
-
-      #if self.class.name == "Person"
-      #  put_opt[:login] = self.login
-      #  @@transport.put_user @data.to_s, put_opt
-      #elsif self.class.name == "Platform"
-      #  put_opt[:platform] = self.name
-      #  put_opt[:project] = self.project
-      #  @@transport.put_platform @data.to_s, put_opt
-      #else
-      #  put_opt[self.class.name.downcase.to_sym] = self.name
-      #
-      #  #FIXME: slightly less hackish, at least the interface is right. nevertheless still a hack
-      #  if( rel = self.class.instance_variable_get( "@rel_belongs_to" ) )
-      #    rel.each do |var|
-      #      put_opt[var] = instance_variable_get( "@#{var}" )
-      #    end
-      #  end
-
-      #  @@transport.put_meta @data.to_s, put_opt
-      #end
       return true
     end
   end

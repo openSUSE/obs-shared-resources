@@ -113,7 +113,7 @@ module ActiveXML
       end
 
       def save( object )
-        #url = object.instance_variable_get( '@axml_substituted_url' )
+        logger.debug "saving #{object}"
         url = substituted_uri_for( object )
         http_do 'put', url, object.dump_xml
       end

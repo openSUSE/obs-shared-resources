@@ -214,7 +214,7 @@ module ActiveXML
       if( @data.elements[symbol.to_s] )
         xpath = args.shift
         query = xpath ? "#{symbol}[#{xpath}]" : symbol.to_s
-        logger.debug "method_missing: query is '#{query}'"
+        #logger.debug "method_missing: query is '#{query}'"
         if @node_cache[query]
           node = @node_cache[query]
           #logger.debug "taking from cache: #{node.inspect.to_s.slice(0..100)}"
