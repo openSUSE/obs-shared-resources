@@ -113,9 +113,26 @@ module ActiveXML
       end
 
       def save( object )
-        logger.debug "saving #{object}"
+        logger.debug "saving #{object.inspect}"
         url = substituted_uri_for( object )
         http_do 'put', url, object.dump_xml
+      end
+
+      # defines an additional header that is passed to the REST server on every subsequent request
+      # e.g.: set_additional_header( "X-Username", "margarethe" )
+      def set_additional_header( key, value )
+        if value.nil? and @http_header.has_key? key
+          @http_header[key] = nil
+        end
+
+        @http_header[key] = value
+      end
+
+      # delete a header field set with set_additional_header
+      def delete_additional_header( key )
+        if @http_header.has_key? key
+          @http_header.delete key
+        end
       end
 
       def direct_http( url, opt={} )
