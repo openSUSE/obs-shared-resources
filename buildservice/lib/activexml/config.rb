@@ -4,9 +4,19 @@ module ActiveXML
   module Config
 
     DEFAULTS = Hash.new
+
+    # the xml backend used for parsing
     DEFAULTS[:xml_backend] = "rexml"
+
+    # available transport plugins
     DEFAULTS[:transport_plugins] = "rest"
+
+    # if transport plugins should be used (deprecated)
+    # TODO: check code for usage of this variable/remove it
     DEFAULTS[:use_transport_plugins] = false
+
+    # if xml should be parsed on load (false) or on first element/attribute access (true)
+    DEFAULTS[:lazy_evaluation] = false
 
     def self.append_features(base)
       super

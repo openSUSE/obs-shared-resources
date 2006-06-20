@@ -80,13 +80,13 @@ module ActiveXML
     #instance methods
 
     attr_reader :data
-    attr_accessor :throw_on_method_missing, :raw_data
+    attr_accessor :throw_on_method_missing
     
     def initialize( data )
       if data.kind_of? REXML::Element
         @data = data
       elsif data.kind_of? String
-        @data = REXML::Document.new( data ).root
+        self.raw_data = data
       elsif data.kind_of? Hash
         #create new
         @data = self.class.make_stub(data)
@@ -102,12 +102,23 @@ module ActiveXML
       if data.kind_of? REXML::Element
         @data = data.clone
       else
-        @data = REXML::Document.new(data.to_str).root
+        if ActiveXML::Config.lazy_evaluation
+          @raw_data = data.clone
+        else
+          @data = REXML::Document.new(data.to_str).root
+        end
       end
     end
 
     def element_name
-      @data.name
+      data.name
+    end
+
+    def data
+      if @data.nil?
+        @data = REXML::Document.new(@raw_data.to_str).root
+      end
+      @data
     end
 
     def define_iterator_for_element( elem )
@@ -117,7 +128,7 @@ module ActiveXML
       def each_#{elem}
         return nil if not has_element? '#{elem}'
         result = Array.new
-        @data.elements.each('#{elem}') do |e|
+        data.elements.each('#{elem}') do |e|
           result << node = create_node_with_relations(e)
           yield node if block_given?
         end
@@ -132,22 +143,26 @@ module ActiveXML
     end
 
     def to_s
-      @data.text or ""
+      data.text or ""
     end
 
     def dump_xml
-      @data.to_s
+      if @data.nil?
+        @raw_data
+      else
+        data.to_s
+      end
     end
 
     def to_param
-      @data.attributes['name']
+      data.attributes['name']
     end
 
     #tests if a child element exists matching the given query.
     #query can either be an element name, an xpath, or any object
     #whose to_s method evaluates to an element name or xpath
     def has_element?( query )
-      not @data.elements[query.to_s].nil?
+      not data.elements[query.to_s].nil?
     end
 
     #removes all elements after the last named from @data and return in list
@@ -158,7 +173,7 @@ module ActiveXML
 
       state = :before_element
       elem_cache = []
-      @data.each_element do |elem|
+      data.each_element do |elem|
         case state
         when :before_element
           next if elem.name != element_name
@@ -170,7 +185,7 @@ module ActiveXML
           redo
         when :after_element
           elem_cache << elem
-          @data.delete_element elem
+          data.delete_element elem
         end
       end
 
@@ -179,7 +194,7 @@ module ActiveXML
 
     def merge_data( elem_list )
       elem_list.each do |elem|
-        @data.add_element elem
+        data.add_element elem
       end
     end
 
@@ -200,18 +215,18 @@ module ActiveXML
         elem = $1
         return nil if not has_element? elem
         result = Array.new
-        @data.elements.each(elem) do |e|
+        data.elements.each(elem) do |e|
           result << node = create_node_with_relations(e)
           block.call(node) if block
         end
         return result
       end
 
-      if( @data.attributes[symbol.to_s] )
-        return @data.attributes[symbol.to_s]
+      if( data.attributes[symbol.to_s] )
+        return data.attributes[symbol.to_s]
       end
 
-      if( @data.elements[symbol.to_s] )
+      if( data.elements[symbol.to_s] )
         xpath = args.shift
         query = xpath ? "#{symbol}[#{xpath}]" : symbol.to_s
         #logger.debug "method_missing: query is '#{query}'"
@@ -219,7 +234,7 @@ module ActiveXML
           node = @node_cache[query]
           #logger.debug "taking from cache: #{node.inspect.to_s.slice(0..100)}"
         else
-          e = @data.elements[query]
+          e = data.elements[query]
           return nil if e.nil?
 
           node = create_node_with_relations(e)
