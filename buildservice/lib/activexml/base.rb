@@ -84,7 +84,7 @@ module ActiveXML
 
     def save
       logger.debug "Save #{self.class}"
-      logger.debug "XML #{@data}"
+      logger.debug "XML #{data}"
       put_opt = {}
      
       self.class.transport.save self

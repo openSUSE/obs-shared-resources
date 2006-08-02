@@ -1,4 +1,3 @@
-require 'net/http'
 
 module ActiveXML
   module Transport
@@ -8,8 +7,11 @@ module ActiveXML
     class UnauthorizedError < Error; end
     class ForbiddenError < Error; end
     class NotFoundError < Error; end
+    class NotImplementedError < Error; end
 
     class Abstract
+      include Reloadable
+
       class << self
         def register_protocol( proto )
           ActiveXML::Config.register_transport self, proto.to_s
@@ -34,13 +36,20 @@ module ActiveXML
       def initialize( target_uri, opt={} )
       end
 
-      def find( *args )
+      def find( model, *args )
+        raise NotImplementedError;
       end
 
-      def save
+      def query( model, query_string )
+        raise NotImplementedError;
+      end
+
+      def save( object )
+        raise NotImplementedError;
       end
 
       def login( user, password )
+        raise NotImplementedError;
       end
 
       def logger
@@ -48,8 +57,222 @@ module ActiveXML
       end
     end
 
+
+
+
+    ##############################################
+    #
+    # BSSQL plugin
+    #
+    ##############################################
+
+
+
+    require 'builder'
+    class BSSQL < Abstract
+      register_protocol 'bssql'
+
+      class << self
+        def spawn( target_uri, opt={} )
+          @transport_obj ||= new( target_uri, opt )
+        end
+      end
+
+      def initialize( target_uri, opt={} )
+        logger.debug "[BSSQL] initialize( #{target_uri.inspect}, #{opt.inspect} )"
+
+        require 'db_project'
+        require 'db_package'
+
+        @xml_to_db_model_map = {
+          :project => "DbProject",
+          :package => "DbPackage"
+        }
+      end
+
+      def xml_to_db_model( xml_model )
+        unless @xml_to_db_model_map.has_key? xml_model
+          raise RuntimeError, "no model association defined for '#{xml_model.inspect}'"
+        end
+
+        case xml_model
+        when :project
+          return DbProject
+        when :package
+          return DbPackage
+        end
+      end
+
+      def find( model, *args )
+        logger.debug "[BSSQL] find( #{model.inspect}, #{args.inspect} )"
+
+        symbolified_model = model.name.downcase.to_sym
+        uri = ActiveXML::Config::TransportMap.target_for( symbolified_model )
+        options = ActiveXML::Config::TransportMap.options_for( symbolified_model )
+
+        # get matching database model class
+        db_model = xml_to_db_model( symbolified_model )
+
+        query = String.new
+        case args[0]
+        when String
+          params = args[1]
+        when Hash
+          params = args[0]
+        when Symbol
+          # :all
+          params = args[1]
+        else
+          raise Error, "illegal parameter to find"
+        end
+
+        query = query_from_options( params )
+        builder = Builder::XmlMarkup.new( :indent => 2 )
+
+        if( query.empty? )
+          items = db_model.find(:all) 
+        else
+          querymap = Hash.new
+          query.split( /\s*and\s*/ ).map {|x| x.split(/=/) }.each do |pair|
+            querymap[pair[0]] = pair[1]
+          end
+
+          join_fragments = Array.new
+          cond_fragments = Array.new
+          cond_values = Array.new
+
+          querymap.each do |k,v|
+            unless( md = k.match /^@(.*)/ )
+              raise NotFoundError, "Illegal query: [#{query}]"
+            end
+
+            v.gsub! /\*/, '%'
+
+            #unquote (I don't think this is safe enough...)
+            v.gsub! /^['"]/, ''
+            v.gsub! /['"]$/, ''
+
+            #FIXME: hack for project parameter in Package.find
+            if( symbolified_model == :package and md[1] == "project" )
+              join_fragments << "db_projects"
+
+              cond_fragments << ["db_packages.db_project_id = db_projects.id"]
+              cond_fragments << ["db_projects.name = ?"]
+
+              cond_values << v
+              next
+            end
+
+            unless( db_model.column_names.include? md[1] )
+              raise NotFoundError, "Unknown attribute '#{md[1]}' in query '#{query}'"
+            end
+
+            cond_fragments << ["#{db_model.table_name}.#{md[1]} LIKE ?"]
+            cond_values << v
+          end
+
+          joins = nil
+          unless join_fragments.empty?
+            joins = ", " + join_fragments.join(", ")
+            logger.debug "[BSSQL] join string: #{joins.inspect}"
+          end
+
+          conditions = [cond_fragments.join(" AND "), cond_values].flatten
+          logger.debug "[BSSQL] find conditions: #{conditions.inspect}"
+
+          items = db_model.find( :all, :select => "#{db_model.table_name}.*", :joins => joins, :conditions => conditions, :limit => args[:limit] )
+        end
+        objects = Array.new
+        xml = String.new
+
+        if( args[0] == :all )
+          items.sort! {|a,b| a.name.downcase <=> b.name.downcase}
+          builder = Builder::XmlMarkup.new( :indent => 2 )
+          xml = builder.directory( :count => items.length ) do |dir|
+            items.each do |item|
+              dir.entry( :name => item.name )
+            end
+          end
+          return Directory.new( xml )
+        end
+
+        items.each do |item|
+          logger.debug "---> "+item.methods.grep(/^to_a/).inspect
+          #if not item.respond_to? :to_axml
+          #  raise RuntimeError, "unable to transform to xml: #{item.inspect}"
+          #end
+          obj = model.new( item.to_axml )
+          
+          obj.instance_variable_set( '@init_options', params )
+          objects << obj
+        end
+        
+        if objects.length > 1 || args[0] == :all
+          return objects
+        elsif objects.length == 1
+          return objects[0]
+        else
+          raise NotFoundError, "not found"
+        end
+      end
+
+      def login( user, password )
+        return true
+      end
+
+      def save( object )
+        logger.debug "[BSSQL] saving object #{object}"
+
+        db_model = xml_to_db_model(object.class.name.downcase.to_sym)
+
+        if db_model.respond_to? :store_axml
+          db_model.store_axml( object )
+        else
+          raise Error, "[BSSQL] Unable to store objects of type '#{object.class.name}'"
+        end
+      end
+
+      def query_from_options( opt_hash )
+        logger.debug "[BSSQL] query_from_options: #{opt_hash.inspect}"
+        query_fragments = Array.new
+        opt_hash.each do |k,v|
+          query_fragments << "@#{k}='#{v}'"
+        end
+        query = query_fragments.join( " and " )
+        logger.debug "[BSSQL] query_from_options: query is: '#{query}'"
+        return query
+      end
+
+      def xml_error( opt={} )
+        default_opts = {
+          :code => 500,
+          :summary => "Default summary",
+        }
+        opt = default_opts.merge opt
+
+        builder = Builder::XmlMarkup.new
+        xml = builder.status( :code => opt[:code] ) do |s|
+          s.summary( opt[:summary] )
+          s.details( opt[:details] ) if opt.has_key? :details
+        end
+
+        xml
+      end
+    end
+
+
+    ##############################################
+    #
+    # rest plugin
+    #
+    ##############################################
+
+
     #TODO: put lots of stuff into base class
+
     require 'base64'
+    require 'net/http'
+
     class Rest < Abstract
       register_protocol 'rest'
       
@@ -60,12 +283,13 @@ module ActiveXML
       end
 
       def initialize( target_uri, opt={} )
+        logger.debug "[REST] initialize( #{target_uri.inspect}, #{opt.inspect} )"
         @options = opt
         if @options.has_key? :all
           @options[:all].scheme = "http"
         end
         @http_header = {}
-     end
+      end
 
       def target_uri=(uri)
         uri.scheme = "http"
@@ -76,9 +300,11 @@ module ActiveXML
         @http_header ||= Hash.new
         @http_header['Authorization'] = 'Basic ' + Base64.encode64( "#{user}:#{password}" )
       end
-     
+      
       # returns document payload as string
       def find( model, *args )
+        logger.debug "[REST] find( #{model.inspect}, #{args.inspect} )"
+        
         params = Hash.new
         symbolified_model = model.name.downcase.to_sym
         uri = ActiveXML::Config::TransportMap.target_for( symbolified_model )
@@ -219,7 +445,7 @@ module ActiveXML
         raise Error, http_response.read_body
       end
       private :handle_response
-    
+      
     end
   end
 end
