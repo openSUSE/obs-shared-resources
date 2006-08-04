@@ -180,7 +180,7 @@ module ActiveXML
           conditions = [cond_fragments.join(" AND "), cond_values].flatten
           logger.debug "[BSSQL] find conditions: #{conditions.inspect}"
 
-          items = db_model.find( :all, :select => "#{db_model.table_name}.*", :joins => joins, :conditions => conditions, :limit => args[:limit] )
+          items = db_model.find( :all, :select => "#{db_model.table_name}.*", :joins => joins, :conditions => conditions )
         end
         objects = Array.new
         xml = String.new
