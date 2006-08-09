@@ -10,8 +10,6 @@ module ActiveXML
     class NotImplementedError < Error; end
 
     class Abstract
-      include Reloadable
-
       class << self
         def register_protocol( proto )
           ActiveXML::Config.register_transport self, proto.to_s
