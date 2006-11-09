@@ -213,7 +213,7 @@ module ActiveXML
 
       if( symbol.to_s =~ /^each_(.*)$/ )
         elem = $1
-        return nil if not has_element? elem
+        return [] if not has_element? elem
         result = Array.new
         data.elements.each(elem) do |e|
           result << node = create_node_with_relations(e)
