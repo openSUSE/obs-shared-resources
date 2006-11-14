@@ -1,6 +1,6 @@
 require 'rake'
 require 'rake/testtask'
 
-load 'switchtower.rake'
+load 'capistrano.rake'
 
 

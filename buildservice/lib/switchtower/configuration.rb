@@ -12,20 +12,27 @@ set :repository, proc {"--username #{svnuser} https://forgesvn1.novell.com/svn/o
 ### changelog/branch settings
 
 # sender address of the changelog mail
-set :cl_mail_from, "deploy-noreply@opensuse.org"
+set :cl_mail_from, "Automated Deploy Message <abauer@suse.com>"
 
 # recipients of the changelog mail (string or array of strings)
 #set :cl_mail_to, ["abauer@suse.de", "cschum@suse.de", "freitag@suse.de", "cwh@suse.de"]
-set :cl_mail_to, "opensuse-svn@forge.novell.com"
+set :cl_mail_to, "abauer@suse.de"
 
 # target url for the branch
 set :cl_branch_url, proc {"https://forgesvn1.novell.com/svn/opensuse/branches/deploy/#{application}/#{File.basename release_path}"}
 
 ### roles
 
-role :web, "buildserviceapi.suse.de"
-role :app, "buildserviceapi.suse.de"
-role :db,  "buildserviceapi.suse.de"
+role :web, "localhost"
+role :app, "localhost"
+role :db,  "localhost"
+
+#role :web, "buildserviceapi.suse.de"
+#role :app, "buildserviceapi.suse.de"
+#role :db,  "buildserviceapi.suse.de"
+#role :web, "api.opensuse.org"
+#role :app, "api.opensuse.org"
+#role :db, "api.opensuse.org"
 
 ### remote settings
 
