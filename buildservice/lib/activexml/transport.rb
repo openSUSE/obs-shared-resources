@@ -131,7 +131,7 @@ module ActiveXML
           items = db_model.find(:all) 
         else
           querymap = Hash.new
-          query.split( /\s*and\s*/ ).map {|x| x.split(/=/) }.each do |pair|
+          query.split( /\s+and\s+/ ).map {|x| x.split(/=/) }.each do |pair|
             querymap[pair[0]] = pair[1]
           end
 
@@ -165,7 +165,7 @@ module ActiveXML
               raise NotFoundError, "Unknown attribute '#{md[1]}' in query '#{query}'"
             end
 
-            cond_fragments << ["#{db_model.table_name}.#{md[1]} LIKE ?"]
+            cond_fragments << ["#{db_model.table_name}.#{md[1]} LIKE BINARY ?"]
             cond_values << v
           end
 
