@@ -165,6 +165,10 @@ module ActiveXML
       not data.elements[query.to_s].nil?
     end
 
+    def has_attribute?( query )
+      not data.attribute(query.to_s).nil?
+    end
+
     #removes all elements after the last named from @data and return in list
     def split_data_after( element_name )
       return false if not element_name
