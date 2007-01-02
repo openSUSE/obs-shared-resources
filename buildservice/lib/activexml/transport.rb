@@ -399,9 +399,9 @@ module ActiveXML
         logger.debug "http_do: url: #{url}"
         begin
           response = Net::HTTP.start(url.host, url.port) do |http|
-            path = URI.escape(url.path)
+            path = url.path
             if url.query
-              path += "?" + URI.escape(url.query)
+              path += "?" + url.query
             end
             logger.debug "http_do: path: #{path}"
 
