@@ -310,8 +310,8 @@ module ActiveXML
         case args[0]
         when Symbol
           logger.debug "Transport.find: using symbol"
-          raise "Illegal symbol, must be :all (or String/Hash)" unless args[0] == :all
-          uri = options[:all]
+          #raise "Illegal symbol, must be :all (or String/Hash)" unless args[0] == :all
+          uri = options[args[0]]
           if args.length > 1
             params = args[1].merge params
           end

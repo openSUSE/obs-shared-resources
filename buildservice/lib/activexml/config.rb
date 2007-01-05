@@ -78,9 +78,9 @@ module ActiveXML
         end
 
         def connect( model, target, opt={} )
-          if opt.has_key? :all
-            opt[:all] = URI(opt[:all])
-            replace_server_if_needed( opt[:all] )
+          opt.each do |key,value|
+             opt[key] = URI(opt[key])
+             replace_server_if_needed( opt[key] )
           end
           
           logger.debug "setting up transport for model #{model}"
