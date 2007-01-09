@@ -18,6 +18,9 @@ module ActiveXML
     # if xml should be parsed on load (false) or on first element/attribute access (true)
     DEFAULTS[:lazy_evaluation] = false
 
+    # globally deactivate write_through to backend on PUT requests
+    DEFAULTS[:global_write_through] = true
+
     def self.append_features(base)
       super
       base.extend ClassMethods
@@ -202,7 +205,7 @@ module ActiveXML
       def add_config_accessor(sym) #:nodoc:
         instance_eval <<-END_EVAL
           def #{sym}
-            if @config[#{sym.inspect}]
+            if @config.has_key? #{sym.inspect}
               return @config[#{sym.inspect}]
             else
               return DEFAULTS[#{sym.inspect}]
