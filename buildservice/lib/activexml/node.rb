@@ -68,6 +68,7 @@ module ActiveXML
         root.add_attribute 'name', opt[:name]
         root.add_attribute 'created_at', opt[:created_at] if opt[:created_at]
         root.add_attribute 'updated_at', opt[:updated_at] if opt[:updated_at]
+        root.add_attribute 'downloads', opt[:downloads] if opt[:downloads]
         root.add_element REXML::Element.new('title')
         root.add_element REXML::Element.new('description')
 
