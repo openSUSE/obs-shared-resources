@@ -82,8 +82,11 @@ module ActiveXML
 
         def connect( model, target, opt={} )
           opt.each do |key,value|
-             opt[key] = URI(opt[key])
-             replace_server_if_needed( opt[key] )
+            # workaround for :write_through option. fix would be to not configure
+            # additional routes and options using the same hash
+            next if key = :write_through
+            opt[key] = URI(opt[key])
+            replace_server_if_needed( opt[key] )
           end
           
           logger.debug "setting up transport for model #{model}"
