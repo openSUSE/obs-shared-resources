@@ -84,7 +84,7 @@ module ActiveXML
           opt.each do |key,value|
             # workaround for :write_through option. fix would be to not configure
             # additional routes and options using the same hash
-            next if key = :write_through
+            next if key == :write_through
             opt[key] = URI(opt[key])
             replace_server_if_needed( opt[key] )
           end
