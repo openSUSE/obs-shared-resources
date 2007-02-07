@@ -140,6 +140,17 @@ module ActiveXML
     end
     #private :define_iterator_for_element
 
+
+    def each
+      result = Array.new
+      data.elements.each do |e|
+        result << node = create_node_with_relations(e)
+        yield node if block_given?
+      end
+      return result
+    end
+
+
     def logger
       self.class.logger
     end
