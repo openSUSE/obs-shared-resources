@@ -381,7 +381,12 @@ module ActiveXML
         u.scheme = "http"
         u.path = URI.escape(uri.path.split(/\//).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("/"))
         if uri.query
-          u.query = URI.escape(uri.query.split(/=/).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("="))
+          new_pairs = []
+          pairs = u.query.split(/&/)
+          pairs.each do |pair|
+            new_pairs << pair.split(/=/).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("=")
+          end
+          u.query = URI.escape(new_pairs.join("&"))
         end
         u.path.gsub!(/\/+/, '/')
         return u
