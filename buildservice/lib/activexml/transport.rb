@@ -342,6 +342,14 @@ module ActiveXML
         http_do 'put', url, object.dump_xml
       end
 
+
+      def delete( object, id )
+        # this is not very nice, but works(tm)
+        url = substituted_uri_for( object ) + "#{id}"
+        http_do 'delete', url
+      end
+
+
       # defines an additional header that is passed to the REST server on every subsequent request
       # e.g.: set_additional_header( "X-Username", "margarethe" )
       def set_additional_header( key, value )
