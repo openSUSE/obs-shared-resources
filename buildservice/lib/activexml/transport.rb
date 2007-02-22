@@ -210,7 +210,8 @@ module ActiveXML
         elsif objects.length == 1
           return objects[0]
         else
-          raise NotFoundError, "not found"
+          logger.debug "[BSSQL] query #{query} returned no objects"
+          raise NotFoundError, "#{model.name.downcase} query \"#{query}\" produced no results"
         end
       end
 
