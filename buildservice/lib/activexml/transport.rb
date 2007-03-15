@@ -409,7 +409,7 @@ module ActiveXML
                   new_pairs << $1 + "=" + val
                 end
               else
-                new_pairs << $1 + "=" + sub_val
+                new_pairs << $1 + "=" + sub_val.to_s
               end
             else
               raise RuntimeError, "illegal url query pair: #{pair.inspect}"
