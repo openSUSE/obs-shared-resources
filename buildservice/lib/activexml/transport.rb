@@ -391,9 +391,29 @@ module ActiveXML
         u.path = URI.escape(uri.path.split(/\//).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("/"))
         if uri.query
           new_pairs = []
-          pairs = u.query.split(/&/)
+          pairs = u.query.split(/&/).map{|x| x.split(/=/, 2)}
           pairs.each do |pair|
-            new_pairs << pair.split(/=/).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("=")
+            if pair.length == 2
+              pair[1] = params[pair[1].to_sym]
+              new_pairs << pair.join("=")
+            elsif pair.length == 1
+              pair[0] =~ /:(\w+)/
+              #new substitution rules:
+              #when param is not there, don't put anything in url
+              #when param is array, put multiple params in url
+              #any other case, stringify param and put it in url
+              next if not params.has_key? $1.to_sym
+              sub_val = params[$1.to_sym]
+              if sub_val.kind_of? Array
+                sub_val.each do |val|
+                  new_pairs << $1 + "=" + val
+                end
+              else
+                new_pairs << $1 + "=" + sub_val
+              end
+            else
+              raise RuntimeError, "illegal url query pair: #{pair.inspect}"
+            end
           end
           u.query = URI.escape(new_pairs.join("&"))
         end
