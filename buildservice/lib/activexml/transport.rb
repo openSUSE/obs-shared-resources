@@ -402,7 +402,7 @@ module ActiveXML
               #when param is not there, don't put anything in url
               #when param is array, put multiple params in url
               #any other case, stringify param and put it in url
-              next if not params.has_key? $1.to_sym
+              next if not params.has_key? $1.to_sym or params[$1.to_sym].nil?
               sub_val = params[$1.to_sym]
               if sub_val.kind_of? Array
                 sub_val.each do |val|
@@ -481,3 +481,4 @@ module ActiveXML
     end
   end
 end
+
