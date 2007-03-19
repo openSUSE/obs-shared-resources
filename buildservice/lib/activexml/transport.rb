@@ -394,7 +394,9 @@ module ActiveXML
           pairs = u.query.split(/&/).map{|x| x.split(/=/, 2)}
           pairs.each do |pair|
             if pair.length == 2
-              pair[1] = params[pair[1].to_sym]
+              pair[1] =~ /:(\w+)/
+              next if not params.has_key? $1.to_sym or params[$1.to_sym].nil?
+              pair[1] = params[$1.to_sym]
               new_pairs << pair.join("=")
             elsif pair.length == 1
               pair[0] =~ /:(\w+)/
