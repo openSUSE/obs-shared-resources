@@ -287,7 +287,7 @@ module ActiveXML
         if @options.has_key? :all
           @options[:all].scheme = "http"
         end
-        @http_header = {}
+        @http_header = {"Content-Type" => "text/plain"}
       end
 
       def target_uri=(uri)
