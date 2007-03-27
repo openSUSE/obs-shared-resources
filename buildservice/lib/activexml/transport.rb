@@ -396,7 +396,7 @@ module ActiveXML
             if pair.length == 2
               pair[1] =~ /:(\w+)/
               next if not params.has_key? $1.to_sym or params[$1.to_sym].nil?
-              pair[1] = params[$1.to_sym]
+              pair[1] = CGI.escape(params[$1.to_sym])
               new_pairs << pair.join("=")
             elsif pair.length == 1
               pair[0] =~ /:(\w+)/
@@ -408,16 +408,16 @@ module ActiveXML
               sub_val = params[$1.to_sym]
               if sub_val.kind_of? Array
                 sub_val.each do |val|
-                  new_pairs << $1 + "=" + val
+                  new_pairs << $1 + "=" + CGI.escape(val)
                 end
               else
-                new_pairs << $1 + "=" + sub_val.to_s
+                new_pairs << $1 + "=" + CGI.escape(sub_val.to_s)
               end
             else
               raise RuntimeError, "illegal url query pair: #{pair.inspect}"
             end
           end
-          u.query = URI.escape(new_pairs.join("&"))
+          u.query = new_pairs.join("&")
         end
         u.path.gsub!(/\/+/, '/')
         return u
