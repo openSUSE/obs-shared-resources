@@ -156,7 +156,7 @@ module ActiveXML
     end
 
     def to_s
-      data.texts.to_s or ""
+      data.texts.map {|t| t.value}.to_s or ""
     end
 
     def dump_xml
