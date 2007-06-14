@@ -79,9 +79,6 @@ module ActiveXML
       def initialize( target_uri, opt={} )
         logger.debug "[BSSQL] initialize( #{target_uri.inspect}, #{opt.inspect} )"
 
-        require 'db_project'
-        require 'db_package'
-
         @xml_to_db_model_map = {
           :project => "DbProject",
           :package => "DbPackage"
@@ -350,6 +347,23 @@ module ActiveXML
         http_do 'delete', url
       end
 
+      def start_keepalive
+        logger.debug "starting keepalive..."
+        symbolified_model = :project
+        uri = ActiveXML::Config::TransportMap.target_for( symbolified_model )
+        begin
+          @http = Net::HTTP.start( uri.host, uri.port )
+        rescue SystemCallError => err
+          raise ConnectionError, "Failed to establish connection: "+err.message
+        end
+      end
+
+      def finish_keepalive
+        return if @http.nil?
+        logger.debug "ending keepalive..."
+        @http.finish
+        @http = nil
+      end
 
       # defines an additional header that is passed to the REST server on every subsequent request
       # e.g.: set_additional_header( "X-Username", "margarethe" )
@@ -432,34 +446,44 @@ module ActiveXML
       private :substituted_uri_for
 
       def http_do( method, url, data=nil )
-        logger.debug "http_do: url: #{url}"
         begin
-          response = Net::HTTP.start(url.host, url.port) do |http|
-            path = url.path
-            if url.query
-              path += "?" + url.query
-            end
-            logger.debug "http_do: path: #{path}"
+          logger.debug "http_do: url: #{url}"
+          keepalive = true
+          if not @http
+            keepalive = false
+            @http = Net::HTTP.start(url.host, url.port)
+          end
+          
+          path = url.path
+          if url.query
+            path += "?" + url.query
+          end
+          logger.debug "http_do: path: #{path}"
 
-            case method
-            when /get/i
-              http.get path, @http_header
-            when /put/i
-              raise "PUT without data" if data.nil?
-              http.put path, data, @http_header
-            when /post/i
-              raise "POST without data" if data.nil?
-              http.post path, data, @http_header
-            when /delete/i
-              http.delete path, @http_header
-            else
-              raise "unknown HTTP method: #{method.inspect}"
-            end
+          case method
+          when /get/i
+            @response = @http.get path, @http_header
+          when /put/i
+            raise "PUT without data" if data.nil?
+            @response = @http.put path, data, @http_header
+          when /post/i
+            raise "POST without data" if data.nil?
+            @response = @http.post path, data, @http_header
+          when /delete/i
+            @response = @http.delete path, @http_header
+          else
+            raise "unknown HTTP method: #{method.inspect}"
           end
         rescue SystemCallError => err
           raise ConnectionError, "Failed to establish connection: "+err.message
         end
-        handle_response( response )
+
+        unless keepalive
+          @http.finish
+          @http = nil
+        end
+
+        return handle_response( @response )
       end
       private :http_do
 
