@@ -474,6 +474,12 @@ module ActiveXML
           else
             raise "unknown HTTP method: #{method.inspect}"
           end
+        rescue Errno::EPIPE => err
+          #keepalive connection died, cleanup and retry
+          logger.debug "--> caught EPIPE, retrying with new HTTP connection"
+          @http.finish
+          @http = nil
+          retry
         rescue SystemCallError => err
           raise ConnectionError, "Failed to establish connection: "+err.message
         end
