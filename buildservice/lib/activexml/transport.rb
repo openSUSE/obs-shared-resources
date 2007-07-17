@@ -300,8 +300,8 @@ module ActiveXML
       # returns document payload as string
       def find( model, *args )
         logger.debug "[REST] find( #{model.inspect}, #{args.inspect} )"
-				params = Hash.new
-				data = nil
+        params = Hash.new
+        data = nil
         symbolified_model = model.name.downcase.to_sym
         uri = ActiveXML::Config::TransportMap.target_for( symbolified_model )
         options = ActiveXML::Config::TransportMap.options_for( symbolified_model )
@@ -311,12 +311,12 @@ module ActiveXML
           #raise "Illegal symbol, must be :all (or String/Hash)" unless args[0] == :all
           uri = options[args[0]]
           if args.length > 1
-          	#:conditions triggers atm. always a post request, the conditions are
-          	# transmitted as post-data 
-          	if args[1].has_key? :conditions
-           		data = args[1][:conditions]
-          	end
-						params = args[1].merge params
+            #:conditions triggers atm. always a post request, the conditions are
+            # transmitted as post-data 
+            if args[1].has_key? :conditions
+              data = args[1][:conditions]
+            end
+            params = args[1].merge params
           end
         when String
           logger.debug "Transport.find: using string"
@@ -333,23 +333,23 @@ module ActiveXML
 
         logger.debug "uri is: #{uri}"
         url = substitute_uri( uri, params )
-				
-				#use get-method if no conditions defined <- no post-data is set.
-				if data.nil?
-        	logger.debug"[REST] Transport.find using GET-method"
-					obj = model.new( http_do( 'get', url ) )
-        	obj.instance_variable_set( '@init_options', params )
-				else
-				#use post-method
-					logger.debug"[REST] Transport.find using POST-method"
-					#logger.debug"[REST] POST-data as xml: #{data.to_s}"
-					obj = model.new( http_do( 'post', url, data.to_s) )
-					obj.instance_variable_set( '@init_options', params )
-				end
-				return obj
+        
+        #use get-method if no conditions defined <- no post-data is set.
+        if data.nil?
+          logger.debug"[REST] Transport.find using GET-method"
+          obj = model.new( http_do( 'get', url ) )
+          obj.instance_variable_set( '@init_options', params )
+        else
+        #use post-method
+          logger.debug"[REST] Transport.find using POST-method"
+          #logger.debug"[REST] POST-data as xml: #{data.to_s}"
+          obj = model.new( http_do( 'post', url, data.to_s) )
+          obj.instance_variable_set( '@init_options', params )
+        end
+        return obj
       end
 
-			def save( object )
+      def save( object )
         logger.debug "saving #{object.inspect}"
         url = substituted_uri_for( object )
         http_do 'put', url, object.dump_xml
@@ -414,12 +414,12 @@ module ActiveXML
 
       #replaces the parameter parts in the uri from the config file with the correct values
       def substitute_uri( uri, params )
-      	
-				
-				logger.debug "[REST] reducing args: #{params.inspect}"
-				params.delete(:conditions)
-				logger.debug "[REST] args is now: #{params.inspect}"      	
-      	
+        
+        
+        logger.debug "[REST] reducing args: #{params.inspect}"
+        params.delete(:conditions)
+        logger.debug "[REST] args is now: #{params.inspect}"        
+        
         u = uri.clone
         u.scheme = "http"
         u.path = URI.escape(uri.path.split(/\//).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("/"))
