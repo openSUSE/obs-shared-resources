@@ -21,6 +21,11 @@ module ActiveXML
         return ActiveXML::SmartNode
       end
 
+      def namespace(ns=nil)
+        return @namespace unless ns
+        @namespace = ns
+      end
+
       #creates an empty xml document
       # FIXME: works only for projects/packages, or by overwriting it in the model definition
       # FIXME: could get info somehow from schema, as soon as schema evaluation is built in
@@ -193,8 +198,15 @@ module ActiveXML
       return node
     end
 
+    def xml_find_args(xpath)
+      ns = self.class.namespace
+      return xpath unless ns
+      return "x:"+xpath, {"x" => ns}
+    end
+
     def method_missing( symbol, *args, &block )
       #logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
+      ns = self.class.namespace
 
       if( data.attributes.has_attr? symbol.to_s )
         return data.attributes[symbol.to_s]
@@ -204,14 +216,14 @@ module ActiveXML
         elem = $1
         return [] if not has_element? elem
         result = Array.new
-        data.find(elem).each do |e|
+        data.find(*xml_find_args(elem)).each do |e|
           result << node = create_node_with_relations(e)
           block.call(node) if block
         end
         return result
       end
 
-      if( not data.find(symbol.to_s).empty? )
+      if( not data.find(*xml_find_args(symbol.to_s)).empty? )
         xpath = args.shift
         query = xpath ? "#{symbol}[#{xpath}]" : symbol.to_s
         #logger.debug "method_missing: query is '#{query}'"
@@ -219,7 +231,7 @@ module ActiveXML
           node = @node_cache[query]
           #logger.debug "taking from cache: #{node.inspect.to_s.slice(0..100)}"
         else
-          e = data.find(query)
+          e = data.find(*xml_find_args(query))
           return nil if e.length == 0
 
           node = create_node_with_relations(e[0])
