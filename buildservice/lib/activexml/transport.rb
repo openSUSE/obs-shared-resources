@@ -141,6 +141,7 @@ module ActiveXML
               raise NotFoundError, "Illegal query: [#{query}]"
             end
 
+            v.gsub! /([%_])/, '\\\\\1' #escape mysql LIKE special chars
             v.gsub! /\*/, '%'
 
             #unquote (I don't think this is safe enough...)
