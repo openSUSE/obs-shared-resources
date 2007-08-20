@@ -18,16 +18,17 @@
 .grey_box_double {
     /* nothing here */
 }
+
 .box_top_row {
     display: block;
     height: 10px;
     clear:both;
 }
-.box_title_row,
+
 .box_title_row {
     display: block;
 }
-.box_title,
+
 .box_title {
     display: block;
     padding: 0 .8em 8px .8em;
@@ -35,6 +36,7 @@
     text-align: center;
     font-weight: bold;
 }
+
 .box_left { 
     position: relative;
     float: left;
@@ -73,9 +75,11 @@
 .box_bottom_row .box_right {
     background: url('../images/bottom_right_corner.png') no-repeat scroll top right;
 }
+
 .box_footer_row {
      display: block;
 }
+
 .box_footer {
     display: block;
     padding: 8px .8em 0 .8em;
@@ -93,31 +97,39 @@
 .grey_box_double .box_top_row {
     background: url('../images/grey_box/top_middle.png') repeat-x scroll bottom left;
 }
+
 .grey_box .box_top_row .box_left,
 .grey_box_double .box_top_row .box_left {
     background: url('../images/grey_box/top_left_corner.png') no-repeat scroll bottom left;
 }
+
 .grey_box .box_top_row .box_right,
 .grey_box_double .box_top_row .box_right {
     background: url('../images/grey_box/top_right_corner.png') no-repeat scroll bottom right;
 }
+
 .grey_box .box_title_row,
 .grey_box_double .box_title_row {
     background: #E0E0E0 url('../images/grey_box/title_right.png') repeat-y scroll top right;
 }
+
 .grey_box .box_title,
 .grey_box_double .box_title {
     background: url('../images/grey_box/title_left.png') repeat-y scroll top left;
 }
+
 .grey_box_double .box_footer_row {
     background: #E0E0E0 url('../images/grey_box/title_right.png') repeat-y scroll top right;
 }
+
 .grey_box_double .box_footer {
     background: url('../images/grey_box/title_left.png') repeat-y scroll top left;
 }
+
 .grey_box_double .box_bottom_row {
     background: url('../images/grey_box/bottom_middle_grey.png') repeat-x scroll top left;
 }
+
 .grey_box_double .box_bottom_row .box_left {
     background: url('../images/grey_box/bottom_left_corner_grey.png') no-repeat scroll top left;
 }
@@ -125,9 +137,11 @@
 .grey_box_double .box_bottom_row .box_right {
     background: url('../images/grey_box/bottom_right_corner_grey.png') no-repeat scroll top right;
 }
+
 /* do not move the following three styles - this allows to have grey boxes
 *  within a grey doublewbox
 */
+
 .grey_box .box_bottom_row {
     background: url('../images/bottom_middle.png') repeat-x scroll top left;
 }
@@ -189,8 +203,9 @@
 .darkgrey_box_double .box_bottom_row .box_right {
     background: url('../images/darkgrey_box/bottom_right_corner_darkgrey.png') no-repeat scroll top right;
 }
+
 /* do not move the following three styles - this allows to have grey boxes
-*  within a grey doublewbox
+*  within a grey doublebox
 */
 .darkgrey_box .box_bottom_row {
     background: url('../images/bottom_middle.png') repeat-x scroll top left;
@@ -203,6 +218,7 @@
 .darkgrey_box .box_bottom_row .box_right {
     background: url('../images/bottom_right_corner.png') no-repeat scroll top right;
 }
+
 /**************
 *  Green box *
 **************/
