@@ -141,9 +141,6 @@ module ActiveXML
               raise NotFoundError, "Illegal query: [#{query}]"
             end
 
-            v.gsub! /([%_])/, '\\\\\1' #escape mysql LIKE special chars
-            v.gsub! /\*/, '%'
-
             #unquote (I don't think this is safe enough...)
             v.gsub! /^['"]/, ''
             v.gsub! /['"]$/, ''
@@ -163,6 +160,9 @@ module ActiveXML
               raise NotFoundError, "Unknown attribute '#{md[1]}' in query '#{query}'"
             end
 
+            v.gsub! /([%_])/, '\\\\\1' #escape mysql LIKE special chars
+            v.gsub! /\*/, '%'
+            
             cond_fragments << ["#{db_model.table_name}.#{md[1]} LIKE BINARY ?"]
             cond_values << v
           end
