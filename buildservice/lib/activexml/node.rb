@@ -171,10 +171,10 @@ module ActiveXML
       data.attributes['name']
     end
 
-		def add_element ( element )
-			self.data.root.add_element element
-		end
-		
+    def add_element ( element )
+      self.data.root.add_element element
+    end
+    
     #tests if a child element exists matching the given query.
     #query can either be an element name, an xpath, or any object
     #whose to_s method evaluates to an element name or xpath
@@ -182,22 +182,22 @@ module ActiveXML
       not data.elements[query.to_s].nil?
     end
 
-		def has_elements?
-			data.has_elements?
-		end
-		
+    def has_elements?
+      data.has_elements?
+    end
+    
     def has_attribute?( query )
       not data.attribute(query.to_s).nil?
     end
 
-		def has_attributes?
-			data.has_attributes?
-		end
-		
-		def delete_element( elem )
-			data.delete_element elem.to_s
-		end
-		
+    def has_attributes?
+      data.has_attributes?
+    end
+    
+    def delete_element( elem )
+      data.delete_element elem.to_s
+    end
+    
     #removes all elements after the last named from @data and return in list
     def split_data_after( element_name )
       return false if not element_name
@@ -281,5 +281,4 @@ module ActiveXML
       super( symbol, *args )
     end
   end
-
 end
