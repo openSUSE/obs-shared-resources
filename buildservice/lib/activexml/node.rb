@@ -34,6 +34,9 @@ module ActiveXML
   end
 
   class Node
+
+    @@elements = {}
+
     class << self
 
       def setup
@@ -46,9 +49,9 @@ module ActiveXML
         # 
         # axbase_subclasses = ActiveXML::Base.subclasses.map {|sc| sc.downcase}
         # if axbase_subclasses.include?( element_name )
-        
-        if %w{package project result person platform}.include?( element_name ) && Object.const_defined?( element_name.capitalize )
-          return Object.const_get( element_name.capitalize )
+
+        if @@elements.include? element_name
+          return @@elements[element_name]
         end
         return ActiveXML::Node
       end
@@ -77,6 +80,42 @@ module ActiveXML
       def logger
         ActiveXML::Config.logger
       end
+
+      def handles_xml_element (*elements)
+        elements.each do |elem|
+          @@elements[elem] = self
+        end
+      end
+
+      def xml_attr_reader (*attrs)
+        attrs.each do |attr|
+          class_eval do
+            define_method(attr.to_s) do
+              data.attributes[attr.to_s]
+            end
+          end
+        end
+      end
+
+      def xml_attr_writer (*attrs)
+        attrs.each do |attr|
+          class_eval do
+            define_method(attr.to_s+'=') do |new_value|
+#              if data.attributes[attr.to_s].nil?
+#                data.add_attribute attr.to_s, new_value.to_s
+#              else
+                data.attributes[attr.to_s] = new_value.to_s
+#              end
+            end
+          end
+        end
+      end
+
+      def xml_attr_accessor (*attrs)
+        xml_attr_reader *attrs
+        xml_attr_writer *attrs
+      end
+
     end
 
     #instance methods
@@ -121,6 +160,14 @@ module ActiveXML
         @data = REXML::Document.new(@raw_data.to_str).root
       end
       @data
+    end
+
+    def text
+      data.text
+    end
+
+    def text= (what)
+      data.text = what
     end
 
     def define_iterator_for_element( elem )
@@ -195,7 +242,11 @@ module ActiveXML
     end
     
     def delete_element( elem )
-      data.delete_element elem.to_s
+      if elem.instance_of? Node
+          data.delete_element elem.data
+      else
+      	data.delete_element elem.to_s
+      end
     end
     
     #removes all elements after the last named from @data and return in list
