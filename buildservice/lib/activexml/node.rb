@@ -242,7 +242,7 @@ module ActiveXML
     end
     
     def delete_element( elem )
-      if elem.instance_of? Node
+      if elem.kind_of? Node
           data.delete_element elem.data
       else
       	data.delete_element elem.to_s
