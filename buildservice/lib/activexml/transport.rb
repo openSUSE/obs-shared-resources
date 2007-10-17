@@ -42,11 +42,11 @@ module ActiveXML
         raise NotImplementedError;
       end
 
-      def save( object )
+      def save(object, opt={})
         raise NotImplementedError;
       end
 
-      def delete( object )
+      def delete(object, opt={})
         raise NotImplementedError;
       end
 
@@ -221,7 +221,7 @@ module ActiveXML
         return true
       end
 
-      def save( object )
+      def save(object, opt={})
         logger.debug "[BSSQL] saving object #{object}"
 
         db_model = xml_to_db_model(object.class.name.downcase.to_sym)
@@ -354,15 +354,15 @@ module ActiveXML
         return obj
       end
 
-      def save( object )
+      def save(object, opt={})
         logger.debug "saving #{object.inspect}"
         url = substituted_uri_for( object )
         http_do 'put', url, object.dump_xml
       end
 
-      def delete(object)
+      def delete(object, opt={})
         logger.debug "deleting #{object.inspect}"
-        url = substituted_uri_for( object, :delete )
+        url = substituted_uri_for( object, :delete, opt )
         http_do 'delete', url
       end
 
@@ -463,7 +463,7 @@ module ActiveXML
       end
       private :substitute_uri
 
-      def substituted_uri_for( object, path_id=nil )
+      def substituted_uri_for( object, path_id=nil, opt={} )
         symbolified_model = object.class.name.downcase.to_sym
         options = ActiveXML::Config::TransportMap.options_for(symbolified_model)
         if path_id and options.has_key? path_id
@@ -471,7 +471,7 @@ module ActiveXML
         else
           uri = ActiveXML::Config::TransportMap.target_for( symbolified_model )
         end
-        substitute_uri( uri, object.instance_variable_get("@init_options") )
+        substitute_uri( uri, object.instance_variable_get("@init_options").merge(opt) )
       end
       private :substituted_uri_for
 

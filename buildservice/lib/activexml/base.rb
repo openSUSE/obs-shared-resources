@@ -82,18 +82,17 @@ module ActiveXML
       method_missing( :name )
     end
 
-    def save
+    def save(opt={})
       logger.debug "Save #{self.class}"
       logger.debug "XML #{data}"
-      put_opt = {}
      
-      self.class.transport.save self
+      self.class.transport.save self, opt
       return true
     end
 
-    def delete
-      logger.debug "Delete #{self.class}"
-      self.class.transport.delete self
+    def delete(opt={})
+      logger.debug "Delete #{self.class}, opt: #{opt.inspect}"
+      self.class.transport.delete self, opt
       return true
     end
   end
