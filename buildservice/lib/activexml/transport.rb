@@ -362,7 +362,7 @@ module ActiveXML
 
       def delete(object)
         logger.debug "deleting #{object.inspect}"
-        url = substituted_uri_for( object )
+        url = substituted_uri_for( object, :delete )
         http_do 'delete', url
       end
 
@@ -463,9 +463,14 @@ module ActiveXML
       end
       private :substitute_uri
 
-      def substituted_uri_for( object )
+      def substituted_uri_for( object, path_id=nil )
         symbolified_model = object.class.name.downcase.to_sym
-        uri = ActiveXML::Config::TransportMap.target_for( symbolified_model )
+        options = ActiveXML::Config::TransportMap.options_for(symbolified_model)
+        if path_id and options.has_key? path_id
+          uri = options[path_id]
+        else
+          uri = ActiveXML::Config::TransportMap.target_for( symbolified_model )
+        end
         substitute_uri( uri, object.instance_variable_get("@init_options") )
       end
       private :substituted_uri_for
