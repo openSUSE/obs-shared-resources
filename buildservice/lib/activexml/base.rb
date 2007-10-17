@@ -90,5 +90,11 @@ module ActiveXML
       self.class.transport.save self
       return true
     end
+
+    def delete
+      logger.debug "Delete #{self.class}"
+      self.class.transport.delete self
+      return true
+    end
   end
 end

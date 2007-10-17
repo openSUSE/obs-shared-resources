@@ -46,6 +46,10 @@ module ActiveXML
         raise NotImplementedError;
       end
 
+      def delete( object )
+        raise NotImplementedError;
+      end
+
       def login( user, password )
         raise NotImplementedError;
       end
@@ -356,9 +360,9 @@ module ActiveXML
         http_do 'put', url, object.dump_xml
       end
 
-      def delete( object, id )
-        # this is not very nice, but works(tm)
-        url = substituted_uri_for( object ) + "#{id}"
+      def delete(object)
+        logger.debug "deleting #{object.inspect}"
+        url = substituted_uri_for( object )
         http_do 'delete', url
       end
 
