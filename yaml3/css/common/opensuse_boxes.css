@@ -55,6 +55,10 @@
     display: block;
 }
 
+#bodyContent {
+  min-height: 30.2em;
+}
+
 .box_content {
     background: #FCFCFC;
     border-left: 1px solid #E0E0E0;
