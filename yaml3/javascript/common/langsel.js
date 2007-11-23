@@ -1,6 +1,11 @@
 /*
 *
-* JavaScript functions for download.opensuse.org
+* JavaScript function for opensuse.org
+*
+* langShow: toggles style from hide to show
+* langRedirect: redirects to another languiage wiki on change
+*               of the language dropdown
+*
 * Author: Frank Sundermeyer <fs@opensuse.org>
 * $Id: $
 */
