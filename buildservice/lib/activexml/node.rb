@@ -297,6 +297,10 @@ module ActiveXML
 
       if( symbol.to_s =~ /^each_(.*)$/ )
         elem = $1
+        query = args[0]
+        if query
+          elem = "#{elem}[#{query}]"
+        end
         return [] if not has_element? elem
         result = Array.new
         data.elements.each(elem) do |e|
