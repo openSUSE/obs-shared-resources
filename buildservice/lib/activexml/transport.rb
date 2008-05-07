@@ -272,6 +272,7 @@ module ActiveXML
     #TODO: put lots of stuff into base class
 
     require 'base64'
+    require 'net/https'
     require 'net/http'
 
     class Rest < Abstract
@@ -481,7 +482,13 @@ module ActiveXML
           keepalive = true
           if not @http
             keepalive = false
-            @http = Net::HTTP.start(url.host, url.port)
+            @http = Net::HTTP.new(url.host, url.port)
+            # FIXME: we should get the protocoll here instead of depending on the port for
+            #         detecting SSL or not.
+            if url.port == 443
+               @http.use_ssl = true
+            end
+            @http.start
           end
           
           path = url.path
