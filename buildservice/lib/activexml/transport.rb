@@ -443,12 +443,17 @@ module ActiveXML
               #new substitution rules:
               #when param is not there, don't put anything in url
               #when param is array, put multiple params in url
+              #when param is a hash, put key=value params in url
               #any other case, stringify param and put it in url
               next if not params.has_key? $1.to_sym or params[$1.to_sym].nil?
               sub_val = params[$1.to_sym]
               if sub_val.kind_of? Array
                 sub_val.each do |val|
                   new_pairs << $1 + "=" + CGI.escape(val)
+                end
+              elsif sub_val.kind_of? Hash
+                sub_val.each_key do |key|
+                  new_pairs << CGI.escape(key) + "=" + CGI.escape(sub_val[key])
                 end
               else
                 new_pairs << $1 + "=" + CGI.escape(sub_val.to_s)
