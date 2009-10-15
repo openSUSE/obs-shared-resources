@@ -1,11 +1,12 @@
-require 'activexml/smartnode'
-
 module ActiveXML
   class GeneralError < StandardError; end
   class NotFoundError < GeneralError; end
   class CreationError < GeneralError; end
 
   class Base < SmartNode
+
+    include ActiveXML::Config
+
     @default_find_parameter = :name
 
     class << self #class methods
@@ -16,9 +17,6 @@ module ActiveXML
       def inherited( subclass )
         # called when a subclass is defined
         logger.debug "initializing model #{subclass}"
-
-        # setup transport object for this model
-        subclass.instance_variable_set "@transport", config.transport_for(subclass.name.downcase.to_sym)
         subclass.instance_variable_set "@default_find_parameter", @default_find_parameter
       end
       private :inherited
@@ -63,7 +61,10 @@ module ActiveXML
         opt[@default_find_parameter] = args[0] if( args[0].kind_of? String )
 
         logger.debug "prepared find args: #{args.inspect}"
-        
+
+        #TODO: somehow we need to set the transport again, as it was not set when subclassing.
+        # only happens with rails >= 2.3.4 and config.cache_classes = true
+        transport = config.transport_for(self.name.downcase.to_sym)
         raise "No transport defined for model #{self.name}" unless transport
         transport.find( self, *args )
       end

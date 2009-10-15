@@ -1,12 +1,12 @@
-require 'activexml/node'
-#require 'opensuse/frontend'
-
 module ActiveXML
   class GeneralError < StandardError; end
   class NotFoundError < GeneralError; end
   class CreationError < GeneralError; end
 
   class Base < Node
+
+    include ActiveXML::Config
+
     @default_find_parameter = :name
 
     class << self #class methods
@@ -16,10 +16,7 @@ module ActiveXML
       
       def inherited( subclass )
         # called when a subclass is defined
-        logger.debug "initializing model #{subclass}"
-
-        # setup transport object for this model
-        subclass.instance_variable_set "@transport", config.transport_for(subclass.name.downcase.to_sym)
+        logger.debug "Initializing ActiveXML model #{subclass}"
         subclass.instance_variable_set "@default_find_parameter", @default_find_parameter
       end
       private :inherited
@@ -64,7 +61,10 @@ module ActiveXML
         opt[@default_find_parameter] = args[0] if( args[0].kind_of? String )
 
         logger.debug "prepared find args: #{args.inspect}"
-        
+
+        #TODO: somehow we need to set the transport again, as it was not set when subclassing.
+        # only happens with rails >= 2.3.4 and config.cache_classes = true
+        transport = config.transport_for(self.name.downcase.to_sym)
         raise "No transport defined for model #{self.name}" unless transport
         transport.find( self, *args )
       end
@@ -85,14 +85,15 @@ module ActiveXML
     def save(opt={})
       logger.debug "Save #{self.class}"
       logger.debug "XML #{data}"
-     
-      self.class.transport.save self, opt
+      transport = TransportMap.transport_for(self.class.name.downcase.to_sym)
+      transport.save self, opt
       return true
     end
 
     def delete(opt={})
       logger.debug "Delete #{self.class}, opt: #{opt.inspect}"
-      self.class.transport.delete self, opt
+      transport = TransportMap.transport_for(self.class.name.downcase.to_sym)
+      transport.delete self, opt
       return true
     end
   end

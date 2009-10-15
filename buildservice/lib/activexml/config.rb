@@ -148,14 +148,14 @@ module ActiveXML
 
         def debug_dump
           require 'pp'
-          pp @default_servers
-
-          pp @transport_class_map
-
-          pp @transport_obj_map
- 
-          pp @mapping
+          pp "Default servers: " + @default_servers
+          pp "Transport class map: " + @transport_class_map
+          pp "Transport obj map: " + @transport_obj_map
+          pp "Mapping: " + @mapping
         end
+
+
+
       end
     end
 
@@ -186,7 +186,6 @@ module ActiveXML
       end
 
       def transport_for( model )
-        
         TransportMap.transport_for model
       end
 
