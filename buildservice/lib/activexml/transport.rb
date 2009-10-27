@@ -417,6 +417,9 @@ module ActiveXML
         http_do opt[:method], url, opt[:data]
       end
 
+
+      private
+
       #replaces the parameter parts in the uri from the config file with the correct values
       def substitute_uri( uri, params )
         
@@ -466,7 +469,7 @@ module ActiveXML
         u.path.gsub!(/\/+/, '/')
         return u
       end
-      private :substitute_uri
+
 
       def substituted_uri_for( object, path_id=nil, opt={} )
         symbolified_model = object.class.name.downcase.to_sym
@@ -478,7 +481,7 @@ module ActiveXML
         end
         substitute_uri( uri, object.instance_variable_get("@init_options").merge(opt) )
       end
-      private :substituted_uri_for
+
 
       def http_do( method, url, data=nil )
         begin
@@ -487,19 +490,13 @@ module ActiveXML
           if not @http
             keepalive = false
             @http = Net::HTTP.new(url.host, url.port)
-            # FIXME: we should get the protocoll here instead of depending on the port for
-            #         detecting SSL or not.
-            if url.port == 443
-               @http.use_ssl = true
-            end
+            # FIXME: we should get the protocol here instead of depending on the port
+            @http.use_ssl = true if url.port == 443
             @http.start
           end
           
           path = url.path
-          if url.query
-            path += "?" + url.query
-          end
-          logger.debug "http_do: path: #{path}"
+          path += "?" + url.query if url.query
 
           case method
           when /get/i
@@ -532,7 +529,7 @@ module ActiveXML
 
         return handle_response( @response )
       end
-      private :http_do
+
 
       def handle_response( http_response )
         case http_response
@@ -549,7 +546,7 @@ module ActiveXML
         end
         raise Error, http_response.read_body
       end
-      private :handle_response
+
       
     end
   end
