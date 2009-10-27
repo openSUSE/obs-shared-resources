@@ -146,7 +146,13 @@ module ActiveXML
         if ActiveXML::Config.lazy_evaluation
           @raw_data = data.clone
         else
-          @data = REXML::Document.new(data.to_str).root
+          begin
+            @data = REXML::Document.new(data.to_str).root
+          rescue Object => e
+            logger.error "Error parsing XML: #{e}"
+            logger.error "XML content was: #{data}"
+            raise e
+          end
         end
       end
     end
