@@ -136,13 +136,13 @@ module ActiveXML
         end
 
         def target_for( model )
-          logger.debug "retrieving target_uri for model '#{model.inspect}'"
+          #logger.debug "retrieving target_uri for model '#{model.inspect}'"
           raise "Model #{model.inspect} is not configured" if not @mapping.has_key? model
           @mapping[model][:target_uri]
         end
 
         def options_for( model )
-          logger.debug "retrieving option hash for model '#{model.inspect}'"
+          #logger.debug "retrieving option hash for model '#{model.inspect}'"
           @mapping[model][:opt]
         end
 

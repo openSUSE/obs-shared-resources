@@ -312,7 +312,7 @@ module ActiveXML
         options = ActiveXML::Config::TransportMap.options_for( symbolified_model )
         case args[0]
         when Symbol
-          logger.debug "Transport.find: using symbol"
+          #logger.debug "Transport.find: using symbol"
           #raise "Illegal symbol, must be :all (or String/Hash)" unless args[0] == :all
           uri = options[args[0]]
           if args.length > 1
@@ -324,13 +324,13 @@ module ActiveXML
             params = args[1].merge params
           end
         when String
-          logger.debug "Transport.find: using string"
+          #logger.debug "Transport.find: using string"
           params[:name] = args[0]
           if args.length > 1
             params = args[1].merge params
           end
         when Hash
-          logger.debug "Transport.find: using hash"
+          #logger.debug "Transport.find: using hash"
           params = args[0]
         else
           raise "Illegal first parameter, must be Symbol/String/Hash"
@@ -341,7 +341,7 @@ module ActiveXML
         
         #use get-method if no conditions defined <- no post-data is set.
         if data.nil?
-          logger.debug"[REST] Transport.find using GET-method"
+          #logger.debug"[REST] Transport.find using GET-method"
           obj = model.new( http_do( 'get', url ) )
           obj.instance_variable_set( '@init_options', params )
         else
@@ -424,9 +424,9 @@ module ActiveXML
       def substitute_uri( uri, params )
         
         
-        logger.debug "[REST] reducing args: #{params.inspect}"
+        #logger.debug "[REST] reducing args: #{params.inspect}"
         params.delete(:conditions)
-        logger.debug "[REST] args is now: #{params.inspect}"        
+        #logger.debug "[REST] args is now: #{params.inspect}"
         
         u = uri.clone
         u.scheme = "http"

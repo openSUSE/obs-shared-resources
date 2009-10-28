@@ -16,7 +16,7 @@ module ActiveXML
       
       def inherited( subclass )
         # called when a subclass is defined
-        logger.debug "Initializing ActiveXML model #{subclass}"
+        #logger.debug "Initializing ActiveXML model #{subclass}"
         subclass.instance_variable_set "@default_find_parameter", @default_find_parameter
       end
       private :inherited
@@ -54,13 +54,13 @@ module ActiveXML
       def find( *args )
         #FIXME: needs cleanup
         #TODO: factor out xml stuff to ActiveXML::Node
-        logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} )"
+        #logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} )"
 
         args[1] ||= {}
         opt = args[0].kind_of?(Hash) ? args[0] : args[1]
         opt[@default_find_parameter] = args[0] if( args[0].kind_of? String )
 
-        logger.debug "prepared find args: #{args.inspect}"
+        #logger.debug "prepared find args: #{args.inspect}"
 
         #TODO: somehow we need to set the transport again, as it was not set when subclassing.
         # only happens with rails >= 2.3.4 and config.cache_classes = true
