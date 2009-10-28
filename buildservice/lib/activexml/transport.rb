@@ -485,7 +485,7 @@ module ActiveXML
 
       def http_do( method, url, data=nil )
         begin
-          logger.debug "http_do: url: #{url}"
+          logger.debug "http_do: method: #{method} url: #{url}"
           keepalive = true
           if not @http
             keepalive = false
