@@ -221,7 +221,7 @@ module ActiveXML
       end
 
       def save(object, opt={})
-        logger.debug "[BSSQL] saving object #{object}"
+        #logger.debug "[BSSQL] saving object #{object}"
 
         db_model = xml_to_db_model(object.class.name.downcase.to_sym)
 
@@ -355,7 +355,7 @@ module ActiveXML
       end
 
       def save(object, opt={})
-        logger.debug "saving #{object.inspect}"
+        #logger.debug "saving #{object.inspect}"
         url = substituted_uri_for( object )
         http_do 'put', url, object.dump_xml
       end
