@@ -36,13 +36,13 @@ module ActiveXML
       end
 
       def belongs_to(*tag_list)
-        logger.debug "belongs_to #{tag_list.inspect}"
+        logger.debug "#{self.name} belongs_to #{tag_list.inspect}"
         @rel_belongs_to ||= Array.new
         @rel_belongs_to.concat(tag_list).uniq!
       end
 
       def has_many(*tag_list)
-        logger.debug "has_many #{tag_list.inspect}"
+        logger.debug "#{self.name} has_many #{tag_list.inspect}"
         @rel_has_many ||= Array.new
         @rel_has_many.concat(tag_list).uniq!
       end

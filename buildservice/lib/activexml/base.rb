@@ -29,20 +29,19 @@ module ActiveXML
 
       def setup(transport_object)
         super()
-
         @@transport = transport_object
         logger.debug "--> ActiveXML successfully set up"
         true
       end
 
       def belongs_to(*tag_list)
-        logger.debug "belongs_to #{tag_list.inspect}"
+        logger.debug "#{self.name} belongs_to #{tag_list.inspect}"
         @rel_belongs_to ||= Array.new
         @rel_belongs_to.concat(tag_list).uniq!
       end
 
       def has_many(*tag_list)
-        logger.debug "has_many #{tag_list.inspect}"
+        logger.debug "#{self.name} has_many #{tag_list.inspect}"
         @rel_has_many ||= Array.new
         @rel_has_many.concat(tag_list).uniq!
       end
@@ -69,18 +68,27 @@ module ActiveXML
         transport.find( self, *args )
       end
 
+      def find_cached( *args )
+        cache_key = self.name + '-' + args.to_s
+        if !(results = Rails.cache.read(cache_key))
+          results = find *args
+          Rails.cache.write(cache_key, results, :expires_in => 30.minutes) if results
+        end
+      results
+      end
+
     end #class methods
 
     def initialize( data, opt={} )
       super(data)
       opt = data if data.kind_of? Hash and opt.empty?
-
       @init_options = opt
     end
 
     def name
       method_missing( :name )
     end
+
 
     def save(opt={})
       logger.debug "Save #{self.class}"
