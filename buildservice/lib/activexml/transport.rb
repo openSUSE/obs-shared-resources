@@ -366,23 +366,6 @@ module ActiveXML
         http_do 'delete', url
       end
 
-      def start_keepalive
-        logger.debug "starting keepalive..."
-        symbolified_model = :project
-        uri = ActiveXML::Config::TransportMap.target_for( symbolified_model )
-        begin
-          @http = Net::HTTP.start( uri.host, uri.port )
-        rescue SystemCallError => err
-          raise ConnectionError, "Failed to establish connection: "+err.message
-        end
-      end
-
-      def finish_keepalive
-        return if @http.nil?
-        logger.debug "ending keepalive..."
-        @http.finish
-        @http = nil
-      end
 
       # defines an additional header that is passed to the REST server on every subsequent request
       # e.g.: set_additional_header( "X-Username", "margarethe" )
@@ -519,7 +502,13 @@ module ActiveXML
           @http = nil
           retry
         rescue SystemCallError => err
-          raise ConnectionError, "Failed to establish connection: "+err.message
+          @http.finish
+          @http = nil
+          raise ConnectionError, "Failed to establish connection: " + err.message
+        rescue EOFError => err
+          @http.finish
+          @http = nil
+          raise ConnectionError, "Failed to establish connection: " + err.message
         end
 
         unless keepalive
