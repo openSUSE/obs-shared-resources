@@ -467,8 +467,10 @@ module ActiveXML
 
 
       def http_do( method, url, data=nil )
+        retries = 0
         begin
-          logger.debug "http_do: method: #{method} url: #{url}"
+          retries += 1
+          logger.debug "http_do ##{retries}: method: #{method} url: #{url} #{}"
           keepalive = true
           if not @http
             keepalive = false
@@ -497,24 +499,27 @@ module ActiveXML
           end
         rescue Errno::EPIPE => err
           #keepalive connection died, cleanup and retry
-          logger.debug "--> caught EPIPE, retrying with new HTTP connection"
+          logger.error "--> caught EPIPE, retrying with new HTTP connection"
           @http.finish
           @http = nil
-          retry
+          retry if retries < 5
+          raise err
         rescue Timeout::Error => err
-          logger.debug "--> caught timeout, retrying with new HTTP connection"
+          logger.error "--> caught timeout, retrying with new HTTP connection"
           @http.finish
           @http = nil
-          retry
+          retry if retries < 5
+          raise err
         rescue SystemCallError => err
           @http.finish
           @http = nil
           raise ConnectionError, "Failed to establish connection: " + err.message
         rescue EOFError => err
-          logger.debug "--> caught EOF, retrying with new HTTP connection"
+          logger.error "--> caught EOF, retrying with new HTTP connection"
           @http.finish
           @http = nil
-          retry
+          retry if retries < 5
+          raise err
         end
 
         unless keepalive
