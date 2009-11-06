@@ -505,7 +505,7 @@ module ActiveXML
           logger.debug "--> caught timeout, retrying with new HTTP connection"
           @http.finish
           @http = nil
-          try
+          retry
         rescue SystemCallError => err
           @http.finish
           @http = nil
