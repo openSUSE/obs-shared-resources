@@ -501,14 +501,20 @@ module ActiveXML
           @http.finish
           @http = nil
           retry
+        rescue Timeout::Error => err
+          logger.debug "--> caught timeout, retrying with new HTTP connection"
+          @http.finish
+          @http = nil
+          try
         rescue SystemCallError => err
           @http.finish
           @http = nil
           raise ConnectionError, "Failed to establish connection: " + err.message
         rescue EOFError => err
+          logger.debug "--> caught EOF, retrying with new HTTP connection"
           @http.finish
           @http = nil
-          raise ConnectionError, "Failed to establish connection: " + err.message
+          retry
         end
 
         unless keepalive
