@@ -71,10 +71,15 @@ module ActiveXML
       def find_cached( *args )
         cache_key = self.name + '-' + args.to_s
         if !(results = Rails.cache.read(cache_key))
-          results = find *args
+          results = find( *args )
           Rails.cache.write(cache_key, results, :expires_in => 30.minutes) if results
         end
       results
+      end
+
+      def free_cache( *args )
+        cache_key = self.name + '-' + args.to_s
+        Rails.cache.delete(cache_key)
       end
 
     end #class methods
