@@ -304,7 +304,8 @@ module ActiveXML
       
       # returns document payload as string
       def find( model, *args )
-        logger.debug "[REST] find( #{model.inspect}, #{args.inspect} )"
+
+        logger.debug "[REST] find( #{model.inspect}, #{args} )"
         params = Hash.new
         data = nil
         symbolified_model = model.name.downcase.to_sym
@@ -336,7 +337,7 @@ module ActiveXML
           raise "Illegal first parameter, must be Symbol/String/Hash"
         end
 
-        logger.debug "uri is: #{uri}"
+        #logger.debug "uri is: #{uri}"
         url = substitute_uri( uri, params )
         
         #use get-method if no conditions defined <- no post-data is set.
@@ -469,8 +470,8 @@ module ActiveXML
       def http_do( method, url, data=nil )
         retries = 0
         begin
+          start = Time.now
           retries += 1
-          logger.debug "http_do ##{retries}: method: #{method} url: #{url} #{}"
           keepalive = true
           if not @http
             keepalive = false
@@ -482,18 +483,20 @@ module ActiveXML
           
           path = url.path
           path += "?" + url.query if url.query
+          logger.debug "http_do ##{retries}: method: #{method} url: " + 
+            "http#{"s" if @http.use_ssl}://#{url.host}:#{url.port}#{path}"
 
           case method
           when /get/i
-            @response = @http.get path, @http_header
+            http_response = @http.get path, @http_header
           when /put/i
             raise "PUT without data" if data.nil?
-            @response = @http.put path, data, @http_header
+            http_response = @http.put path, data, @http_header
           when /post/i
             raise "POST without data" if data.nil?
-            @response = @http.post path, data, @http_header
+            http_response = @http.post path, data, @http_header
           when /delete/i
-            @response = @http.delete path, @http_header
+            http_response = @http.delete path, @http_header
           else
             raise "unknown HTTP method: #{method.inspect}"
           end
@@ -520,6 +523,8 @@ module ActiveXML
           @http = nil
           retry if retries < 5
           raise err
+        ensure
+          logger.debug "Request took #{Time.now - start} seconds"
         end
 
         unless keepalive
@@ -527,7 +532,7 @@ module ActiveXML
           @http = nil
         end
 
-        return handle_response( @response )
+        return handle_response( http_response )
       end
 
 

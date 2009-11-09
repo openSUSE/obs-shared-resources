@@ -42,7 +42,7 @@ module ActiveXML
       end
 
       def has_many(*tag_list)
-        logger.debug "#{self.name} has_many #{tag_list.inspect}"
+        #logger.debug "#{self.name} has_many #{tag_list.inspect}"
         @rel_has_many ||= Array.new
         @rel_has_many.concat(tag_list).uniq!
       end
