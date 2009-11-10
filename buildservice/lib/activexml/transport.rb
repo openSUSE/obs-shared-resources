@@ -523,6 +523,12 @@ module ActiveXML
           @http = nil
           retry if retries < 5
           raise err
+        rescue SocketError => err
+          logger.error "--> caught SocketError: #{err.getmessage}, retrying with new HTTP connection"
+          @http.finish
+          @http = nil
+          retry if retries < 5
+          raise err
         ensure
           logger.debug "Request took #{Time.now - start} seconds"
         end
