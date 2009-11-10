@@ -508,10 +508,9 @@ module ActiveXML
           retry if retries < 5
           raise err
         rescue Timeout::Error => err
-          logger.error "--> caught timeout, retrying with new HTTP connection"
+          logger.error "--> caught timeout, closing HTTP"
           @http.finish
           @http = nil
-          retry if retries < 5
           raise err
         rescue SystemCallError => err
           @http.finish
