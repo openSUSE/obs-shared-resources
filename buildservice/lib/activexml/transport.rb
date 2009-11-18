@@ -474,7 +474,6 @@ module ActiveXML
           retries += 1
           keepalive = true
           if not @http
-            keepalive = false
             @http = Net::HTTP.new(url.host, url.port)
             # FIXME: we should get the protocol here instead of depending on the port
             @http.use_ssl = true if url.port == 443
