@@ -162,10 +162,7 @@ module ActiveXML
     end
 
     def data
-      if @data.nil?
-        @data = REXML::Document.new(@raw_data.to_str).root
-      end
-      @data
+      @data ||= REXML::Document.new(@raw_data.to_str).root
     end
 
     def text

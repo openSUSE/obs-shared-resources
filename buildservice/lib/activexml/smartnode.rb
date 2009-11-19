@@ -89,7 +89,6 @@ module ActiveXML
     end
 
     def data
-      #return @data unless @data.nil?
       @data ||= XML::Smart.string(@raw_data.to_str).root
     end
 
