@@ -477,6 +477,7 @@ module ActiveXML
             @http = Net::HTTP.new(url.host, url.port)
             # FIXME: we should get the protocol here instead of depending on the port
             @http.use_ssl = true if url.port == 443
+            @http.read_timeout = 300
             @http.start
           end
           
