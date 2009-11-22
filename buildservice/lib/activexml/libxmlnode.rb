@@ -53,7 +53,7 @@ module ActiveXML
         if @@elements.include? element_name
           return @@elements[element_name]
         end
-        return ActiveXML::Node
+        return ActiveXML::LibXMLNode
       end
 
       #creates an empty xml document
@@ -162,16 +162,20 @@ module ActiveXML
     end
 
     def data
-      @data ||= XML::Parser.string(@raw_data.to_str).parse.root
+      if !@data && @raw_data
+         @data = XML::Parser.string(@raw_data.to_str).parse.root
+      end
+      @data
     end
 
     def text
-      data.text
+      puts 'text -%s- -%s-' % [data.inner_xml, data.content]
+      data.inner_xml
     end
 
-    def text= (what)
-      data.text = what
-    end
+    #def text= (what)
+    #  data.text = what
+    #end
 
     def define_iterator_for_element( elem )
       logger.debug "2> starting to define iterator for element '#{elem}'"
@@ -193,7 +197,7 @@ module ActiveXML
 
     def each
       result = Array.new
-      data.each_elements do |e|
+      data.each_element do |e|
         result << node = create_node_with_relations(e)
         yield node if block_given?
       end
@@ -207,7 +211,25 @@ module ActiveXML
 
     def to_s
       # rexml: data.texts.map {|t| t.value}.to_s or ""
-      dump_xml
+      ret = ''
+      data.each do |node|
+        if node.node_type == LibXML::XML::Node::TEXT_NODE
+	   ret += node.content
+	end
+      end
+      ret
+    end
+
+    def marshal_dump
+      { 'throw' => @throw_on_method_missing, 'cache' => @node_cache, 
+        'raw' => @raw_data }
+    end
+
+    def marshal_load(data)
+      @throw_on_method_missing = data['throw']
+      @node_cache = data['cache']
+      @data = nil
+      @raw_data = data['raw']
     end
 
     def dump_xml
@@ -320,6 +342,8 @@ module ActiveXML
         return result
       end
 
+      return nil unless data
+
       if data.attributes[symbols] 
         return data.attributes[symbols]
       end
@@ -346,4 +370,8 @@ module ActiveXML
       super( symbol, *args )
     end
   end
+
+  class XMLNode < LibXMLNode
+  end
+
 end

@@ -343,4 +343,8 @@ module ActiveXML
       super( symbol, *args )
     end
   end
+
+  class XMLNode < Node
+  end
+
 end
