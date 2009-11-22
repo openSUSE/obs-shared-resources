@@ -244,6 +244,10 @@ module ActiveXML
       data.has_attributes?
     end
     
+    def delete_attribute( name )
+      data.attributes[name] = nil
+    end
+
     def delete_element( elem )
       if elem.kind_of? Node
           data.delete_element elem.data
