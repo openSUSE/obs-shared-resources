@@ -324,7 +324,7 @@ module ActiveXML
     end
 
     def method_missing( symbol, *args, &block )
-      logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
+      #logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
 
       symbols = symbol.to_s
       if( symbols =~ /^each_(.*)$/ )
@@ -351,10 +351,10 @@ module ActiveXML
       if !data.find_first(symbols).nil?
         xpath = args.shift
         query = xpath ? "#{symbol}[#{xpath}]" : symbols
-        logger.debug "method_missing: query is '#{query}'"
+        #logger.debug "method_missing: query is '#{query}'"
         if @node_cache[query]
           node = @node_cache[query]
-          logger.debug "taking from cache: #{node.inspect.to_s.slice(0..100)}"
+          #logger.debug "taking from cache: #{node.inspect.to_s.slice(0..100)}"
         else
           e = data.find_first(query)
           return nil if e.nil?
