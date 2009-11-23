@@ -284,10 +284,13 @@ module ActiveXML
     end
 
     def delete_element( elem )
-      if elem.kind_of? Node
-          data.delete_element elem.data
+      if elem.kind_of? LibXMLNode
+          elem.data.remove!
+      elsif elem.kind_of? LibXML::XML::Node
+           elem.remove! 
       else
-      	data.delete_element elem.to_s
+        logger.debug 'delete ' + elem.to_s
+      	data.find_first(elem.to_s).remove!
       end
     end
     
@@ -311,7 +314,7 @@ module ActiveXML
           redo
         when :after_element
           elem_cache << elem
-          data.delete_element elem
+          delete_element elem
         end
       end
 
@@ -320,7 +323,7 @@ module ActiveXML
 
     def merge_data( elem_list )
       elem_list.each do |elem|
-        data.add_element elem
+        data << elem
       end
     end
 
