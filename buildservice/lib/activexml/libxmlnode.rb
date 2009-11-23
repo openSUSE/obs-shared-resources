@@ -265,7 +265,10 @@ module ActiveXML
     end
 
     def has_elements?
-      data.first?
+      # need to check for actual elements. Just a children can also mean
+      # text node
+      data.each_element { |e| return true }
+      return false
     end
     
     def has_attribute?( query )
@@ -323,7 +326,7 @@ module ActiveXML
 
     def create_node_with_relations( element )
       #FIXME: relation stuff should be taken into an extra module
-      puts element.name
+      #puts element.name
       klass = self.class.get_class(element.name)
       opt = {}
       node = nil
