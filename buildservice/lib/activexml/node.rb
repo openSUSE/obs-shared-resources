@@ -221,8 +221,8 @@ module ActiveXML
       data.attributes['name']
     end
 
-    def add_element ( element )
-      self.data.root.add_element element
+    def add_element ( element, attrs=nil )
+      self.data.root.add_element element, attrs
     end
     
     #tests if a child element exists matching the given query.

@@ -169,13 +169,13 @@ module ActiveXML
     end
 
     def text
-      puts 'text -%s- -%s-' % [data.inner_xml, data.content]
-      data.inner_xml
+      #puts 'text -%s- -%s-' % [data.inner_xml, data.content]
+      data.content
     end
 
-    #def text= (what)
-    #  data.text = what
-    #end
+    def text= (what)
+      data.content = what
+    end
 
     def define_iterator_for_element( elem )
       logger.debug "2> starting to define iterator for element '#{elem}'"
@@ -244,8 +244,17 @@ module ActiveXML
       data.attributes['name']
     end
 
-    def add_element ( element )
-      data.add_element element
+    def add_element ( element, attrs=nil )
+      #puts 'before ' + data.to_s
+      raise "First argument must be an element name" if element.nil?
+      #puts data.inspect
+      el = XML::Node.new(element)
+      data << el
+      attrs.each do |key, value|
+        el.attributes[key]=value
+      end if attrs.kind_of? Hash
+      #puts 'after ' + data.to_s
+      LibXMLNode.new(el)
     end
     
     #tests if a child element exists matching the given query.
