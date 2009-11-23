@@ -222,7 +222,7 @@ module ActiveXML
     end
 
     def add_element ( element, attrs=nil )
-      self.data.root.add_element element, attrs
+      ActiveXML::Node.new(self.data.root.add_element element, attrs)
     end
     
     #tests if a child element exists matching the given query.
