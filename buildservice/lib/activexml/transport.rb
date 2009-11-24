@@ -349,16 +349,16 @@ module ActiveXML
         #use post-method
           logger.debug"[REST] Transport.find using POST-method"
           #logger.debug"[REST] POST-data as xml: #{data.to_s}"
-          obj = model.new( http_do( 'post', url, data.to_s) )
+          obj = model.new( http_do( 'post', url, :data => data.to_s) )
           obj.instance_variable_set( '@init_options', params )
         end
         return obj
       end
 
       def save(object, opt={})
-        #logger.debug "saving #{object.inspect}"
+        logger.debug "saving #{object.inspect}"
         url = substituted_uri_for( object )
-        http_do 'put', url, object.dump_xml
+        http_do 'put', url, :data => object.dump_xml
       end
 
       def delete(object, opt={})
@@ -386,7 +386,7 @@ module ActiveXML
       end
 
       def direct_http( url, opt={} )
-        defaults = {:method => "GET"}
+        defaults = {:method => "GET", :timeout => 60}
         opt = defaults.merge opt
 
         #set default host if not set in uri
@@ -398,7 +398,7 @@ module ActiveXML
 
         logger.debug "--> direct_http url: #{url.inspect}"
 
-        http_do opt[:method], url, opt[:data]
+        http_do opt[:method], url, opt
       end
 
 
@@ -467,7 +467,7 @@ module ActiveXML
       end
 
 
-      def http_do( method, url, data=nil )
+      def http_do( method, url, opt={} )
         retries = 0
         begin
           start = Time.now
@@ -477,9 +477,9 @@ module ActiveXML
             @http = Net::HTTP.new(url.host, url.port)
             # FIXME: we should get the protocol here instead of depending on the port
             @http.use_ssl = true if url.port == 443
-            @http.read_timeout = 300
             @http.start
           end
+          @http.read_timeout = opt[:timeout]
           
           path = url.path
           path += "?" + url.query if url.query
@@ -490,11 +490,11 @@ module ActiveXML
           when /get/i
             http_response = @http.get path, @http_header
           when /put/i
-            raise "PUT without data" if data.nil?
-            http_response = @http.put path, data, @http_header
+            raise "PUT without data" if opt[:data].nil?
+            http_response = @http.put path, opt[:data], @http_header
           when /post/i
-            raise "POST without data" if data.nil?
-            http_response = @http.post path, data, @http_header
+            raise "POST without data" if opt[:data].nil?
+            http_response = @http.post path, opt[:data], @http_header
           when /delete/i
             http_response = @http.delete path, @http_header
           else
