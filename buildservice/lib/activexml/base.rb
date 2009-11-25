@@ -70,7 +70,12 @@ module ActiveXML
 
       def find_cached( *args )
         cache_key = self.name + '-' + args.to_s
-        if !(results = Rails.cache.read(cache_key))
+        begin
+          results = Rails.cache.read(cache_key)
+        rescue Object => e
+          logger.error "Error loading from cache: #{e.message}"
+        end
+        if !results
           results = find( *args )
           Rails.cache.write(cache_key, results, :expires_in => 30.minutes) if results
         end
