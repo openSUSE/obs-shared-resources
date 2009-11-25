@@ -59,8 +59,6 @@ module ActiveXML
     end
 
 
-
-
     ##############################################
     #
     # BSSQL plugin
@@ -500,13 +498,6 @@ module ActiveXML
           else
             raise "unknown HTTP method: #{method.inspect}"
           end
-        rescue Errno::EPIPE => err
-          #keepalive connection died, cleanup and retry
-          logger.error "--> caught EPIPE, retrying with new HTTP connection"
-          @http.finish
-          @http = nil
-          retry if retries < 5
-          raise err
         rescue Timeout::Error => err
           logger.error "--> caught timeout, closing HTTP"
           @http.finish
@@ -516,14 +507,8 @@ module ActiveXML
           @http.finish
           @http = nil
           raise ConnectionError, "Failed to establish connection: " + err.message
-        rescue EOFError => err
-          logger.error "--> caught EOF, retrying with new HTTP connection"
-          @http.finish
-          @http = nil
-          retry if retries < 5
-          raise err
-        rescue SocketError => err
-          logger.error "--> caught SocketError: #{err.getmessage}, retrying with new HTTP connection"
+        rescue SocketError, Errno::EPIPE, EOFError, Net::HTTPBadResponse => err
+          logger.error "--> caught #{err.class}: #{err.message}, retrying with new HTTP connection"
           @http.finish
           @http = nil
           retry if retries < 5
@@ -540,7 +525,6 @@ module ActiveXML
         return handle_response( http_response )
       end
 
-
       def handle_response( http_response )
         case http_response
         when Net::HTTPSuccess, Net::HTTPRedirection
@@ -556,9 +540,25 @@ module ActiveXML
         end
         raise Error, http_response.read_body
       end
-
       
     end
+
+    def self.extract_error_message exception
+      message = exception.message[0..120]
+      code = "unknown"
+      begin
+        api_error = REXML::Document.new( exception.message ).root
+        if api_error and api_error.name == "status"
+          code = api_error.attributes['code']
+          message = api_error.elements['summary'].text
+          api_exception = api_error.elements['exception'] if api_error.elements['exception']
+        end
+      rescue Object => e
+        Rails.logger.error "Couldn't parse error xml: #{e.message[0..120]}"
+      end
+      return message, code, api_exception
+    end
+
   end
 end
 
