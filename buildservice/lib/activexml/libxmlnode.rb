@@ -244,16 +244,18 @@ module ActiveXML
       data.attributes['name']
     end
 
+    def add_node(node)
+      xmlnode = LibXMLNode.new(node).data
+      data << data.doc.import(xmlnode)
+    end
+
     def add_element ( element, attrs=nil )
-      #puts 'before ' + data.to_s
       raise "First argument must be an element name" if element.nil?
-      #puts data.inspect
       el = XML::Node.new(element)
       data << el
       attrs.each do |key, value|
         el.attributes[key]=value
       end if attrs.kind_of? Hash
-      #puts 'after ' + data.to_s
       LibXMLNode.new(el)
     end
     
@@ -289,7 +291,6 @@ module ActiveXML
       elsif elem.kind_of? LibXML::XML::Node
            elem.remove! 
       else
-        logger.debug 'delete ' + elem.to_s
       	data.find_first(elem.to_s).remove!
       end
     end
