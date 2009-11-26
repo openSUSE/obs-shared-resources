@@ -66,15 +66,13 @@ module ActiveXML
         end
         root_tag_name = self.name.downcase
         doc = XML::Document.new
-        root = XML::Node.new root_tag_name
-        doc.add_element root
-        root.add_attribute 'name', opt[:name]
-        root.add_attribute 'created', opt[:created_at] if opt[:created_at]
-        root.add_attribute 'updated', opt[:updated_at] if opt[:updated_at]
-        root.add_element XML::Node.new('title')
-        root.add_element XML::Node.new('description')
-
-        root
+        doc.root = XML::Node.new root_tag_name
+        doc.root['name'] = opt[:name]
+        doc.root['created'] = opt[:created_at] if opt[:created_at]
+        doc.root['updated'] = opt[:updated_at] if opt[:updated_at]
+        doc.root << XML::Node.new('title')
+        doc.root << XML::Node.new('description')
+        doc.root
       end
 
       def logger
