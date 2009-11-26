@@ -508,7 +508,7 @@ module ActiveXML
           @http = nil
           raise ConnectionError, "Failed to establish connection: " + err.message
         rescue SocketError, Errno::EPIPE, EOFError, Net::HTTPBadResponse,
-            ActiveXML::Transport::ConnectionError => err
+            ActiveXML::Transport::ConnectionError, IOError => err
           logger.error "--> caught #{err.class}: #{err.message}, retrying with new HTTP connection"
           @http.finish
           @http = nil
