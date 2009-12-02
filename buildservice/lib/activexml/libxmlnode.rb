@@ -144,6 +144,9 @@ module ActiveXML
         if ActiveXML::Config.lazy_evaluation
           @raw_data = data.clone
         else
+          if data.empty?
+             raise RuntimeError.new('Empty XML passed!')
+          end
           begin
             @data = XML::Parser.string(data.to_str).parse.root
           rescue Object => e
