@@ -223,7 +223,7 @@ module ActiveXML
 
     def marshal_dump
       { 'throw' => @throw_on_method_missing, 'cache' => @node_cache, 
-        'raw' => @raw_data }
+        'raw' => dump_xml }
     end
 
     def marshal_load(data)
