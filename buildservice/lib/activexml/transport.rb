@@ -58,14 +58,11 @@ module ActiveXML
       end
     end
 
-
     ##############################################
     #
     # BSSQL plugin
     #
     ##############################################
-
-
 
     require 'active_support'
     class BSSQL < Abstract
@@ -126,7 +123,7 @@ module ActiveXML
         builder = Builder::XmlMarkup.new( :indent => 2 )
 
         if( query.empty? )
-          items = db_model.find(:all) 
+          items = db_model.find(:all)
         else
           querymap = Hash.new
           query.split( /\s+and\s+/ ).map {|x| x.split(/=/) }.each do |pair|
@@ -163,7 +160,7 @@ module ActiveXML
 
             v.gsub! /([%_])/, '\\\\\1' #escape mysql LIKE special chars
             v.gsub! /\*/, '%'
-            
+
             cond_fragments << ["#{db_model.table_name}.#{md[1]} LIKE BINARY ?"]
             cond_values << v
           end
@@ -199,11 +196,11 @@ module ActiveXML
           #  raise RuntimeError, "unable to transform to xml: #{item.inspect}"
           #end
           obj = model.new( item.to_axml )
-          
+
           obj.instance_variable_set( '@init_options', params )
           objects << obj
         end
-        
+
         if objects.length > 1 || args[0] == :all
           return objects
         elsif objects.length == 1
@@ -258,13 +255,11 @@ module ActiveXML
       end
     end
 
-
     ##############################################
     #
-    # rest plugin
+    # REST plugin
     #
     ##############################################
-
 
     #TODO: put lots of stuff into base class
 
@@ -274,7 +269,7 @@ module ActiveXML
 
     class Rest < Abstract
       register_protocol 'rest'
-      
+
       class << self
         def spawn( target_uri, opt={} )
           @transport_obj ||= new( target_uri, opt )
@@ -299,7 +294,7 @@ module ActiveXML
         @http_header ||= Hash.new
         @http_header['Authorization'] = 'Basic ' + Base64.encode64( "#{user}:#{password}" )
       end
-      
+
       # returns document payload as string
       def find( model, *args )
 
@@ -316,7 +311,7 @@ module ActiveXML
           uri = options[args[0]]
           if args.length > 1
             #:conditions triggers atm. always a post request, the conditions are
-            # transmitted as post-data 
+            # transmitted as post-data
             if args[1].has_key? :conditions
               data = args[1][:conditions]
             end
@@ -337,7 +332,7 @@ module ActiveXML
 
         #logger.debug "uri is: #{uri}"
         url = substitute_uri( uri, params )
-        
+
         #use get-method if no conditions defined <- no post-data is set.
         if data.nil?
           #logger.debug"[REST] Transport.find using GET-method"
@@ -364,7 +359,6 @@ module ActiveXML
         url = substituted_uri_for( object, :delete, opt )
         http_do 'delete', url
       end
-
 
       # defines an additional header that is passed to the REST server on every subsequent request
       # e.g.: set_additional_header( "X-Username", "margarethe" )
@@ -399,17 +393,15 @@ module ActiveXML
         http_do opt[:method], url, opt
       end
 
-
       private
 
       #replaces the parameter parts in the uri from the config file with the correct values
       def substitute_uri( uri, params )
-        
-        
+
         #logger.debug "[REST] reducing args: #{params.inspect}"
         params.delete(:conditions)
         #logger.debug "[REST] args is now: #{params.inspect}"
-        
+
         u = uri.clone
         u.scheme = "http"
         u.path = URI.escape(uri.path.split(/\//).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("/"))
@@ -452,7 +444,6 @@ module ActiveXML
         return u
       end
 
-
       def substituted_uri_for( object, path_id=nil, opt={} )
         symbolified_model = object.class.name.downcase.to_sym
         options = ActiveXML::Config::TransportMap.options_for(symbolified_model)
@@ -463,7 +454,6 @@ module ActiveXML
         end
         substitute_uri( uri, object.instance_variable_get("@init_options").merge(opt) )
       end
-
 
       def http_do( method, url, opt={} )
         retries = 0
@@ -478,10 +468,10 @@ module ActiveXML
             @http.start
           end
           @http.read_timeout = opt[:timeout]
-          
+
           path = url.path
           path += "?" + url.query if url.query
-          logger.debug "http_do ##{retries}: method: #{method} url: " + 
+          logger.debug "http_do ##{retries}: method: #{method} url: " +
             "http#{"s" if @http.use_ssl}://#{url.host}:#{url.port}#{path}"
 
           case method
@@ -541,7 +531,7 @@ module ActiveXML
         end
         raise Error, http_response.read_body
       end
-      
+
     end
 
     def self.extract_error_message exception
@@ -562,4 +552,3 @@ module ActiveXML
 
   end
 end
-

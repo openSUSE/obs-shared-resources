@@ -46,7 +46,7 @@ module ActiveXML
       def get_class(element_name)
         # FIXME: lines below don't work with relations. the related model has to
         # be pulled in when the relation is defined
-        # 
+        #
         # axbase_subclasses = ActiveXML::Base.subclasses.map {|sc| sc.downcase}
         # if axbase_subclasses.include?( element_name )
 
@@ -122,7 +122,7 @@ module ActiveXML
 
     attr_reader :data
     attr_accessor :throw_on_method_missing
-    
+
     def initialize( data )
       if data.kind_of? REXML::Element
         @data = data
@@ -224,7 +224,7 @@ module ActiveXML
     def add_element ( element, attrs=nil )
       ActiveXML::Node.new(self.data.root.add_element element, attrs)
     end
-    
+
     #tests if a child element exists matching the given query.
     #query can either be an element name, an xpath, or any object
     #whose to_s method evaluates to an element name or xpath
@@ -235,7 +235,7 @@ module ActiveXML
     def has_elements?
       data.has_elements?
     end
-    
+
     def has_attribute?( query )
       not data.attribute(query.to_s).nil?
     end
@@ -243,7 +243,7 @@ module ActiveXML
     def has_attributes?
       data.has_attributes?
     end
-    
+
     def delete_attribute( name )
       data.attributes[name] = nil
     end
@@ -255,7 +255,7 @@ module ActiveXML
       	data.delete_element elem.to_s
       end
     end
-    
+
     #removes all elements after the last named from @data and return in list
     def split_data_after( element_name )
       return false if not element_name
@@ -333,12 +333,12 @@ module ActiveXML
           return nil if e.nil?
 
           node = create_node_with_relations(e)
-          
+
           @node_cache[query] = node
         end
         return node
       end
-      
+
       return unless @throw_on_method_missing
       super( symbol, *args )
     end

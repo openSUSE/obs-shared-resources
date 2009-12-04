@@ -13,7 +13,7 @@ module ActiveXML
 
       #transport object, gets defined according to configuration when Base is subclassed
       attr_reader :transport
-      
+
       def inherited( subclass )
         # called when a subclass is defined
         #logger.debug "Initializing ActiveXML model #{subclass}"
@@ -99,7 +99,6 @@ module ActiveXML
       method_missing( :name )
     end
 
-
     def save(opt={})
       logger.debug "Save #{self.class}"
       logger.debug "XML #{data}"
@@ -114,5 +113,6 @@ module ActiveXML
       transport.delete self, opt
       return true
     end
+
   end
 end

@@ -25,13 +25,13 @@ module ActiveXML
       super
       base.extend ClassMethods
     end
-    
+
     module ClassMethods
       # defines ActiveXML::Base.config. Returns the ActiveXML::Config module from which you
-      # can get/set the current configuration by using the dynamically added accessors. 
+      # can get/set the current configuration by using the dynamically added accessors.
       # ActiveXML::Base.config can also be called with a block which gets passed the Config object.
       # The block style call is typically used from the environment files in ${RAILS_ROOT}/config
-      # 
+      #
       # Example:
       # ActiveXML::Base.config do |conf|
       #   conf.xml_backend = "rexml"
@@ -42,13 +42,13 @@ module ActiveXML
       #
       # Example:
       # ActiveXML::Config.xml_backend = "xml_smart"
-      # 
+      #
       def config
         yield(ActiveXML::Config) if block_given?
         return ActiveXML::Config
       end
     end
-    
+
     class TransportMap
 
       # stores the default server for a specific protocol
@@ -73,7 +73,7 @@ module ActiveXML
         def logger
           ActiveXML::Config.logger
         end
-        
+
         def default_server( transport, location )
           @default_servers ||= Hash.new
           logger.debug "default_server for #{transport.inspect} models: #{location}"
@@ -88,7 +88,7 @@ module ActiveXML
             opt[key] = URI(opt[key])
             replace_server_if_needed( opt[key] )
           end
-          
+
           logger.debug "setting up transport for model #{model}"
           uri = URI( target )
           @transport_obj_map[model] = transport = spawn_transport( uri.scheme, opt )
@@ -154,13 +154,11 @@ module ActiveXML
           pp "Mapping: " + @mapping
         end
 
-
-
       end
     end
 
     class << self
-      
+
       # access the logger object. All ActiveXML modules should use this method
       # instead of using RAILS_DEFAULT_LOGGER to remain independent of rails
       def logger
@@ -180,7 +178,7 @@ module ActiveXML
         puts "Transport Map:"
         TransportMap.debug_dump
       end
-      
+
       def setup_transport
         yield TransportMap
       end
@@ -192,7 +190,7 @@ module ActiveXML
       def register_transport( klass, proto )
         TransportMap.register_transport klass, proto
       end
-      
+
       def method_missing( sym, *args ) #:nodoc:
         attr_name = sym.to_s =~ /=$/ ? sym.to_s.sub(/.$/, '').to_sym : sym
         if DEFAULTS.has_key? attr_name

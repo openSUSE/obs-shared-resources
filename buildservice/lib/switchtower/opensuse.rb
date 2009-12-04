@@ -26,7 +26,7 @@ task :update_changelog, :roles => [:db, :web, :app] do
 
   puts "Branching to branch: #{cl_branch_url}"
   `svn copy #{repository} #{cl_branch_url} -m 'automated deploy branch'`
-  
+
   subject = "[deploy] #{application} update from rev #{server_rev(self)} to rev #{head_rev(self)}"
   from = cl_mail_from
   to = cl_mail_to
@@ -62,7 +62,7 @@ end
 desc "deploy current revision into staging area"
 task :deploy_stage, :roles => [:web, :app, :db] do
   set :deploy_to, stage_deploy_to
-  
+
   # FIXME: hack: undefine after_update_code handler (changelog sending) for stage
   class << self
     def update_changelog; end
@@ -84,7 +84,7 @@ end
 
 def changelog_entry( actor )
   return $opensuse_changelog_entry unless $opensuse_changelog_entry.nil?
-  
+
   puts "Retrieving log..."
   log_xml_str = `svn log -r#{server_rev(actor)+1}:HEAD --xml`
 
@@ -98,13 +98,13 @@ def changelog_entry( actor )
   log_xml_doc.root.elements.each('logentry') do |logentry|
     msg = logentry.elements['msg'].text
     next if msg =~ /^automated changelog update/
-    
+
     author = logentry.elements['author'].text
     rev = logentry.attributes['revision']
-    
+
     #msg << "[rev #{rev} #{author}]"
     msg << "\n" unless msg[-1,1] == "\n"
-    
+
     unless msg =~ /^-/
       msg.sub!( /^/, "- " )
     end

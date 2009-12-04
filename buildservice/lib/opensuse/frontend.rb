@@ -12,10 +12,10 @@ module Suse
     class UnauthorizedError < HTTPError; end
     class ForbiddenError < HTTPError; end
     class UnspecifiedError < HTTPError; end
-    
+
     class TransportError < Error; end
     class ConnectionError < TransportError; end
-    
+
 
     @@logger = RAILS_DEFAULT_LOGGER
 
@@ -26,16 +26,16 @@ module Suse
     def logger
       @@logger
     end
-    
+
     def initialize( frontend_url )
       uri = URI.parse( frontend_url )
       unless uri.is_a? URI::HTTP
         raise RuntimeError, "url to frontend server is not a valid HTTP url"
       end
-      
+
       @http = Net::HTTP.new( uri.host, uri.port )
     end
-    
+
     # HACK HACK HACK HACK HACK
     def get_log_chunk( project, package, repo, arch, offset=0 )
       path = "/result/#{project}/#{repo}/#{package}/#{arch}/log?nostream=1&start=#{offset}"
@@ -86,15 +86,15 @@ module Suse
       logger.debug "--> get_result: #{opt.inspect}"
       path = '/result/'
       path += opt[:project] + "/"
-      
+
       if opt[:platform]
         path += opt[:platform] + "/"
       end
-      
+
       if opt[:package]
         path +=  opt[:package] + "/"
       end
-      
+
       path += "result"
       logger.debug "--> get_result path: #{path}"
       do_get( path )
@@ -116,7 +116,7 @@ module Suse
       #logger.debug "I would do a put request to '#{path}' with following data:"
       #logger.debug data
       #return true
-      
+
       logger.debug "--> put_meta path: #{path}"
       do_put( data, path )
     end
@@ -170,7 +170,7 @@ module Suse
         raise ConnectionError, wrap_xml( :summary => err.to_s )
       end
     end
-    
+
     def do_delete( path )
       begin
         response = @http.start do |http|
@@ -182,7 +182,7 @@ module Suse
         raise ConnectionError, wrap_xml( :summary => err.to_s )
       end
     end
-    
+
     def do_put( data, path )
       begin
         path = URI.escape( path )
@@ -222,7 +222,7 @@ module Suse
       when Net::HTTPClientError, Net::HTTPServerError
         raise UnspecifiedError, error_doc( response.read_body )
       end
-      
+
       raise HTTPError, error_doc( response.read_body )
     end
 
@@ -235,7 +235,7 @@ module Suse
         error_doc = wrap_xml( :content => content )
       end
       if error_doc.root.nil? or not %w|error status|.include? error_doc.root.name
-        error_doc = wrap_xml( :content => content ) 
+        error_doc = wrap_xml( :content => content )
       end
       error_doc
     end
@@ -267,7 +267,7 @@ module Suse
         header['Authorization' ] = base64_auth_string
       elsif cred[:ichain_user]
         logger.debug "Transport: Transmitting iChain user"
-        header['X-username'] = cred[:ichain_user] 
+        header['X-username'] = cred[:ichain_user]
       end
       header
     end
@@ -289,7 +289,7 @@ module Suse
       cred = get_credentials
       unless cred[:login] and cred[:passwd]
         # logger.debug "Credentials are not complete!"
-	return ""
+        return ""
       end
       re = 'Basic ' + Base64.encode64( cred[:login]+':'+cred[:passwd] )
       # puts "Base64 String reply: #{re}"

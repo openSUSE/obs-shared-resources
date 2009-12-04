@@ -46,7 +46,7 @@ module ActiveXML
       def get_class(element_name)
         # FIXME: lines below don't work with relations. the related model has to
         # be pulled in when the relation is defined
-        # 
+        #
         # axbase_subclasses = ActiveXML::Base.subclasses.map {|sc| sc.downcase}
         # if axbase_subclasses.include?( element_name )
 
@@ -120,7 +120,7 @@ module ActiveXML
 
     attr_reader :data
     attr_accessor :throw_on_method_missing
-    
+
     def initialize( data )
       if data.kind_of? XML::Node
         @data = data
@@ -215,8 +215,8 @@ module ActiveXML
       ret = ''
       data.each do |node|
         if node.node_type == LibXML::XML::Node::TEXT_NODE
-	   ret += node.content
-	end
+          ret += node.content
+        end
       end
       ret
     end
@@ -256,7 +256,7 @@ module ActiveXML
       end if attrs.kind_of? Hash
       LibXMLNode.new(el)
     end
-    
+
     #tests if a child element exists matching the given query.
     #query can either be an element name, an xpath, or any object
     #whose to_s method evaluates to an element name or xpath
@@ -270,7 +270,7 @@ module ActiveXML
       data.each_element { |e| return true }
       return false
     end
-    
+
     def has_attribute?( query )
       not data.attributes.get_attribute(query).nil?
     end
@@ -278,21 +278,21 @@ module ActiveXML
     def has_attributes?
       data.attributes?
     end
-    
+
     def delete_attribute( name )
       data.attributes.get_attribute(name).remove!
     end
 
     def delete_element( elem )
       if elem.kind_of? LibXMLNode
-          elem.data.remove!
+        elem.data.remove!
       elsif elem.kind_of? LibXML::XML::Node
-           elem.remove! 
+        elem.remove!
       else
-      	data.find_first(elem.to_s).remove!
+        data.find_first(elem.to_s).remove!
       end
     end
-    
+
     #removes all elements after the last named from @data and return in list
     def split_data_after( element_name )
       return false if not element_name
@@ -358,7 +358,7 @@ module ActiveXML
 
       return nil unless data
 
-      if data.attributes[symbols] 
+      if data.attributes[symbols]
         return data.attributes[symbols]
       end
 
@@ -374,12 +374,12 @@ module ActiveXML
           return nil if e.nil?
 
           node = create_node_with_relations(e)
-          
+
           @node_cache[query] = node
         end
         return node
       end
-      
+
       return unless @throw_on_method_missing
       super( symbol, *args )
     end

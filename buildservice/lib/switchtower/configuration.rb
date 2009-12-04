@@ -35,5 +35,3 @@ set :stage_deploy_to, proc {"/srv/www/opensuse_stage/#{application}"}
 
 # user for ssh operations
 set :user, "opensuse"
-
-

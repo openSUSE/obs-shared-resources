@@ -2,5 +2,3 @@ require 'rake'
 require 'rake/testtask'
 
 load 'capistrano.rake'
-
-

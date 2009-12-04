@@ -22,4 +22,3 @@ class CGI #:nodoc:
     end
   end # module QueryExtension
 end
-
