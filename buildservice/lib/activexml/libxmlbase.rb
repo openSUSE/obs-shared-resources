@@ -7,6 +7,9 @@ module ActiveXML
 
     include ActiveXML::Config
 
+    # need it for test case
+    attr_reader :init_options
+
     @default_find_parameter = :name
 
     class << self #class methods
@@ -94,6 +97,15 @@ module ActiveXML
       method_missing( :name )
     end
 
+    def marshal_dump
+      a = super
+      a.push(@init_options)
+    end
+
+    def marshal_load(dumped)
+      super
+      @init_options = *dumped.shift(1)
+    end
 
     def save(opt={})
       logger.debug "Save #{self.class}"

@@ -222,15 +222,12 @@ module ActiveXML
     end
 
     def marshal_dump
-      { 'throw' => @throw_on_method_missing, 'cache' => @node_cache, 
-        'raw' => dump_xml }
+      [@throw_on_method_missing, @node_cache, dump_xml]
     end
 
-    def marshal_load(data)
-      @throw_on_method_missing = data['throw']
-      @node_cache = data['cache']
+    def marshal_load(dumped)
+      @throw_on_method_missing, @node_cache, @raw_data = *dumped.shift(3)
       @data = nil
-      @raw_data = data['raw']
     end
 
     def dump_xml
