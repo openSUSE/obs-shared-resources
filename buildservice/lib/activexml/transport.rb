@@ -494,7 +494,10 @@ module ActiveXML
           @http = nil
           raise err
         rescue SystemCallError => err
-          @http.finish
+          begin
+             @http.finish
+          rescue 
+          end
           @http = nil
           raise ConnectionError, "Failed to establish connection: " + err.message
         rescue SocketError, Errno::EPIPE, EOFError, Net::HTTPBadResponse,
