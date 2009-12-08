@@ -339,7 +339,7 @@ module ActiveXML
           obj = model.new( http_do( 'get', url ) )
           obj.instance_variable_set( '@init_options', params )
         else
-        #use post-method
+          #use post-method
           logger.debug"[REST] Transport.find using POST-method"
           #logger.debug"[REST] POST-data as xml: #{data.to_s}"
           objdata = http_do( 'post', url, :data => data.to_s)
@@ -495,24 +495,20 @@ module ActiveXML
           @http.finish
           @http = nil
           raise err
-        rescue SystemCallError => err
-          begin
-             @http.finish
-          rescue 
-          end
-          @http = nil
-          if err.errno == Errno::EPIPE || err.errno == Errno::EINTR
-	     logger.error "--> caught #{err.class}: #{err.message}, retrying with new HTTP connection"
-             retry if retries < 5 
-          end
-          raise ConnectionError, "Failed to establish connection: " + err.message
-        rescue SocketError, Errno::EPIPE, EOFError, Net::HTTPBadResponse,
-            ActiveXML::Transport::ConnectionError, IOError => err
+        rescue SocketError, Errno::EINTR, Errno::EPIPE, EOFError, Net::HTTPBadResponse, IOError => err
           logger.error "--> caught #{err.class}: #{err.message}, retrying with new HTTP connection"
           @http.finish
           @http = nil
           retry if retries < 5
           raise err
+        rescue SystemCallError => err
+          begin
+            @http.finish
+          rescue => e
+            logger.error "Couldn't finish http connection: #{e.message}"
+          end
+          @http = nil
+          raise ConnectionError, "Failed to establish connection: " + err.message
         ensure
           logger.debug "Request took #{Time.now - start} seconds"
         end
