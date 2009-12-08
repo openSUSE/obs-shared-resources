@@ -336,17 +336,17 @@ module ActiveXML
         #use get-method if no conditions defined <- no post-data is set.
         if data.nil?
           #logger.debug"[REST] Transport.find using GET-method"
-          obj = model.new( http_do( 'get', url ) )
-          obj.instance_variable_set( '@init_options', params )
+          objdata = http_do( 'get', url )
+          raise RuntimeError.new("GET to %s returned no data" % url) if objdata.empty?
         else
           #use post-method
           logger.debug"[REST] Transport.find using POST-method"
           #logger.debug"[REST] POST-data as xml: #{data.to_s}"
           objdata = http_do( 'post', url, :data => data.to_s)
           raise RuntimeError.new("POST to %s returned no data" % url) if objdata.empty?
-          obj = model.new( objdata )
-          obj.instance_variable_set( '@init_options', params )
         end
+        obj = model.new( objdata )
+        obj.instance_variable_set( '@init_options', params )
         return obj
       end
 
