@@ -221,8 +221,12 @@ module ActiveXML
       data.attributes['name']
     end
 
+    def add_node(node)
+      data.root.add_element REXML::Document.new(node).root
+    end
+
     def add_element ( element, attrs=nil )
-      ActiveXML::Node.new(self.data.root.add_element element, attrs)
+      ActiveXML::Node.new(data.root.add_element element, attrs)
     end
 
     #tests if a child element exists matching the given query.
