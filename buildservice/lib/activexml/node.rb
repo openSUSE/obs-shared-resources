@@ -170,7 +170,7 @@ module ActiveXML
     end
 
     def text= (what)
-      data.text = what
+      data.text = what.to_xs
     end
 
     def define_iterator_for_element( elem )
