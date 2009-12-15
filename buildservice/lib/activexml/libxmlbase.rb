@@ -112,7 +112,8 @@ module ActiveXML
       logger.debug "XML #{data}"
       transport = TransportMap.transport_for(self.class.name.downcase.to_sym)
       if opt[:create]
-        transport.create self, opt
+        @raw_data = transport.create self, opt
+        @data = nil
       else
         transport.save self, opt
       end
