@@ -350,6 +350,12 @@ module ActiveXML
         return obj
       end
 
+      def create(object, opt={})
+        logger.debug "create #{object.inspect}"
+        url = substituted_uri_for( object, :create, opt )
+        http_do 'post', url, :data => object.dump_xml
+      end
+
       def save(object, opt={})
         logger.debug "saving #{object.inspect}"
         url = substituted_uri_for( object )
@@ -412,9 +418,10 @@ module ActiveXML
           pairs = u.query.split(/&/).map{|x| x.split(/=/, 2)}
           pairs.each do |pair|
             if pair.length == 2
-              pair[1] =~ /:(\w+)/
-              next if not params.has_key? $1.to_sym or params[$1.to_sym].nil?
-              pair[1] = CGI.escape(params[$1.to_sym])
+              if pair[1] =~ /:(\w+)/
+                next if not params.has_key? $1.to_sym or params[$1.to_sym].nil?
+                pair[1] = CGI.escape(params[$1.to_sym])
+              end
               new_pairs << pair.join("=")
             elsif pair.length == 1
               pair[0] =~ /:(\w+)/
