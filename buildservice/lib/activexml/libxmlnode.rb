@@ -289,7 +289,8 @@ module ActiveXML
       elsif elem.kind_of? LibXML::XML::Node
         elem.remove!
       else
-        data.find_first(elem.to_s).remove!
+        e = data.find_first(elem.to_s)
+        e.remove! if e
       end
     end
 
