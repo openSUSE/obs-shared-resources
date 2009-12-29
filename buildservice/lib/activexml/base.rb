@@ -3,9 +3,12 @@ module ActiveXML
   class NotFoundError < GeneralError; end
   class CreationError < GeneralError; end
 
-  class Base < Node
+  class Base < LibXMLNode
 
     include ActiveXML::Config
+
+    # need it for test case
+    attr_reader :init_options
 
     @default_find_parameter = :name
 
@@ -70,12 +73,7 @@ module ActiveXML
 
       def find_cached( *args )
         cache_key = self.name + '-' + args.to_s
-        begin
-          results = Rails.cache.read(cache_key)
-        rescue Object => e
-          logger.error "Error loading from cache: #{e.message}"
-        end
-        if !results
+        if !(results = Rails.cache.read(cache_key))
           results = find( *args )
           Rails.cache.write(cache_key, results, :expires_in => 30.minutes) if results
         end
@@ -99,11 +97,26 @@ module ActiveXML
       method_missing( :name )
     end
 
+    def marshal_dump
+      a = super
+      a.push(@init_options)
+    end
+
+    def marshal_load(dumped)
+      super
+      @init_options = *dumped.shift(1)
+    end
+
     def save(opt={})
       logger.debug "Save #{self.class}"
       logger.debug "XML #{data}"
       transport = TransportMap.transport_for(self.class.name.downcase.to_sym)
-      transport.save self, opt
+      if opt[:create]
+        @raw_data = transport.create self, opt
+        @data = nil
+      else
+        transport.save self, opt
+      end
       return true
     end
 
