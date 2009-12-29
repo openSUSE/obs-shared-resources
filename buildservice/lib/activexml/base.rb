@@ -2,6 +2,7 @@ module ActiveXML
   class GeneralError < StandardError; end
   class NotFoundError < GeneralError; end
   class CreationError < GeneralError; end
+  class ParseError < GeneralError; end
 
   class Base < LibXMLNode
 

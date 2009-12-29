@@ -137,6 +137,18 @@ module ActiveXML
       @node_cache = {}
     end
 
+    def parse(data)
+      raise ParseError.new('Empty XML passed!') if data.empty?
+      begin
+        @data = XML::Parser.string(data.to_str).parse.root
+      rescue LibXML::XML::Error => e
+        logger.error "Error parsing XML: #{e}"
+        logger.error "XML content was: #{data}"
+        raise ParseError.new e.message
+      end
+    end
+    private :parse
+
     def raw_data=( data )
       if data.kind_of? XML::Node
         @data = data.clone
@@ -144,16 +156,7 @@ module ActiveXML
         if ActiveXML::Config.lazy_evaluation
           @raw_data = data.clone
         else
-          if data.empty?
-             raise RuntimeError.new('Empty XML passed!')
-          end
-          begin
-            @data = XML::Parser.string(data.to_str).parse.root
-          rescue Object => e
-            logger.error "Error parsing XML: #{e}"
-            logger.error "XML content was: #{data}"
-            raise e
-          end
+          parse(data)
         end
       end
     end
@@ -164,7 +167,7 @@ module ActiveXML
 
     def data
       if !@data && @raw_data
-         @data = XML::Parser.string(@raw_data.to_str).parse.root
+         parse(@raw_data)
       end
       @data
     end
