@@ -109,8 +109,6 @@ module ActiveXML
     end
 
     def save(opt={})
-      logger.debug "Save #{self.class}"
-      logger.debug "XML #{data}"
       transport = TransportMap.transport_for(self.class.name.downcase.to_sym)
       if opt[:create]
         @raw_data = transport.create self, opt
