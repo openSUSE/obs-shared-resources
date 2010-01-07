@@ -140,7 +140,7 @@ module ActiveXML
     def parse(data)
       raise ParseError.new('Empty XML passed!') if data.empty?
       begin
-        @data = XML::Parser.string(data.to_str).parse.root
+        @data = XML::Parser.string(data.to_str.strip).parse.root
       rescue LibXML::XML::Error => e
         logger.error "Error parsing XML: #{e}"
         logger.error "XML content was: #{data}"
