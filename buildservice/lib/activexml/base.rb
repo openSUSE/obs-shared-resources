@@ -69,7 +69,12 @@ module ActiveXML
         # only happens with rails >= 2.3.4 and config.cache_classes = true
         transport = config.transport_for(self.name.downcase.to_sym)
         raise "No transport defined for model #{self.name}" unless transport
-        transport.find( self, *args )
+        begin
+          transport.find( self, *args )
+        rescue ActiveXML::Transport::NotFoundError
+          logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} ) did not find anything, return nil"
+          return nil
+        end
       end
 
       def find_cached( *args )

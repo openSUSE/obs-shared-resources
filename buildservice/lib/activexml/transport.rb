@@ -295,7 +295,7 @@ module ActiveXML
         @http_header['Authorization'] = 'Basic ' + Base64.encode64( "#{user}:#{password}" )
       end
 
-      # returns document payload as string
+      # returns object
       def find( model, *args )
 
         logger.debug "[REST] find( #{model.inspect}, #{args} )"
