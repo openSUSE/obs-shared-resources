@@ -465,6 +465,14 @@ module ActiveXML
       end
 
       def http_do( method, url, opt={} )
+        case method
+        when /put/i, /post/i, /delete/i
+          max_retries = 1
+          @http.finish if @http
+          @http = nil
+        when /get/i
+          max_retries = 5
+        end
         retries = 0
         begin
           start = Time.now
@@ -503,10 +511,12 @@ module ActiveXML
           @http = nil
           raise err
         rescue SocketError, Errno::EINTR, Errno::EPIPE, EOFError, Net::HTTPBadResponse, IOError => err
-          logger.error "--> caught #{err.class}: #{err.message}, retrying with new HTTP connection"
           @http.finish
           @http = nil
-          retry if retries < 5
+          if retries < max_retries
+            logger.error "--> caught #{err.class}: #{err.message}, retrying with new HTTP connection"
+            retry
+          end
           raise err
         rescue SystemCallError => err
           begin
