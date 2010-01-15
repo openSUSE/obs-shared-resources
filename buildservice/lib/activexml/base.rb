@@ -78,12 +78,12 @@ module ActiveXML
       end
 
       def find_cached( *args )
-        opts = args.pop if args.last.kind_of?(Hash)
-        opts = {:expires => 30.minutes}.merge( opts || Hash.new )
+        opts = args.last if args.last.kind_of?(Hash) and args.last[:expires_in]
+        opts = {:expires_in => 30.minutes}.merge( opts || Hash.new )
         cache_key = self.name + '-' + args.to_s
         if !(results = Rails.cache.read(cache_key))
           results = find( *args )
-          Rails.cache.write(cache_key, results, :expires_in => opts[:expires]) if results
+          Rails.cache.write(cache_key, results, :expires_in => opts[:expires_in]) if results
         end
       results
       end
