@@ -386,7 +386,7 @@ module ActiveXML
       end
 
       def direct_http( url, opt={} )
-        defaults = {:method => "GET", :timeout => 60}
+        defaults = {:method => "GET"}
         opt = defaults.merge opt
 
         #set default host if not set in uri
@@ -465,6 +465,9 @@ module ActiveXML
       end
 
       def http_do( method, url, opt={} )
+        defaults = {:timeout => 60}
+        opt = defaults.merge opt
+
         case method
         when /put/i, /post/i, /delete/i
           max_retries = 1
