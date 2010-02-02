@@ -345,7 +345,11 @@ module ActiveXML
           objdata = http_do( 'post', url, :data => data.to_s)
           raise RuntimeError.new("POST to %s returned no data" % url) if objdata.empty?
         end
-        obj = model.new( objdata )
+        begin
+          obj = model.new( objdata )
+        rescue ActiveXML::ParseError
+          raise "Parsing XML failed from: #{url}"
+        end
         obj.instance_variable_set( '@init_options', params )
         return obj
       end
