@@ -176,10 +176,9 @@ module ActiveXML
 
           items = db_model.find( :all, :select => "#{db_model.table_name}.*", :joins => joins, :conditions => conditions )
         end
-        objects = Array.new
         xml = String.new
 
-        if( args[0] == :all )
+        if args[0] == :all 
           items.sort! {|a,b| a.name.downcase <=> b.name.downcase}
           builder = Builder::XmlMarkup.new( :indent => 2 )
           xml = builder.directory( :count => items.length ) do |dir|
@@ -187,7 +186,7 @@ module ActiveXML
               dir.entry( :name => item.name )
             end
           end
-          return Directory.new( xml )
+          return xml, params
         end
 
         items.each do |item|
@@ -195,20 +194,11 @@ module ActiveXML
           #if not item.respond_to? :to_axml
           #  raise RuntimeError, "unable to transform to xml: #{item.inspect}"
           #end
-          obj = model.new( item.to_axml )
-
-          obj.instance_variable_set( '@init_options', params )
-          objects << obj
+          return item.to_axml, params
         end
 
-        if objects.length > 1 || args[0] == :all
-          return objects
-        elsif objects.length == 1
-          return objects[0]
-        else
-          logger.debug "[BSSQL] query #{query} returned no objects"
-          raise NotFoundError, "#{model.name.downcase} query \"#{query}\" produced no results"
-        end
+        logger.debug "[BSSQL] query #{query} returned no objects"
+        raise NotFoundError, "#{model.name.downcase} query \"#{query}\" produced no results"
       end
 
       def login( user, password )
