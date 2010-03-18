@@ -54,7 +54,7 @@ module ActiveXML
         @error
       end
 
-      def find( *args )
+      def find_priv(cache_time, *args )
         #FIXME: needs cleanup
         #TODO: factor out xml stuff to ActiveXML::Node
         #logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} )"
@@ -70,22 +70,35 @@ module ActiveXML
         transport = config.transport_for(self.name.downcase.to_sym)
         raise "No transport defined for model #{self.name}" unless transport
         begin
-          transport.find( self, *args )
+	  if cache_time
+	    cache_key = URI::escape( self.name + '-' + args.to_s )
+	    objdata, params = Rails.cache.fetch(cache_key, :expires_in => cache_time) do
+	      transport.find( self, *args )
+	    end
+	  else
+	    objdata, params = transport.find( self, *args )
+	  end
+	  begin
+	    obj = self.new( objdata )
+	  rescue ActiveXML::ParseError
+	    raise "Parsing XML failed from: #{url}"
+	  end
+	  obj.instance_variable_set( '@init_options', params )
+	  return obj
         rescue ActiveXML::Transport::NotFoundError
           logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} ) did not find anything, return nil"
           return nil
         end
       end
 
+      def find( *args )
+	find_priv(nil, *args )
+      end
+
       def find_cached( *args )
         opts = args.last if args.last.kind_of?(Hash) and args.last[:expires_in]
         opts = {:expires_in => 30.minutes}.merge( opts || Hash.new )
-        cache_key = URI::escape( self.name + '-' + args.to_s )
-        if !(results = Rails.cache.read(cache_key))
-          results = find( *args )
-          Rails.cache.write(cache_key, results, :expires_in => opts[:expires_in]) if results
-        end
-      results
+	find_priv(opts[:expires_in], *args)
       end
 
       def free_cache( *args )
