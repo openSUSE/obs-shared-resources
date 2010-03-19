@@ -109,11 +109,6 @@ module ActiveXML
         end
       end
 
-      def xml_attr_accessor (*attrs)
-        xml_attr_reader *attrs
-        xml_attr_writer *attrs
-      end
-
     end
 
     #instance methods

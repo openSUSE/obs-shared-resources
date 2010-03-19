@@ -135,13 +135,13 @@ module ActiveXML
           cond_values = Array.new
 
           querymap.each do |k,v|
-            unless( md = k.match /^@(.*)/ )
+            unless( md = k.match(/^@(.*)/) )
               raise NotFoundError, "Illegal query: [#{query}]"
             end
 
             #unquote (I don't think this is safe enough...)
-            v.gsub! /^['"]/, ''
-            v.gsub! /['"]$/, ''
+            v.gsub!(/^['"]/, '')
+            v.gsub!(/['"]$/, '')
 
             #FIXME: hack for project parameter in Package.find
             if( symbolified_model == :package and md[1] == "project" )
@@ -158,8 +158,8 @@ module ActiveXML
               raise NotFoundError, "Unknown attribute '#{md[1]}' in query '#{query}'"
             end
 
-            v.gsub! /([%_])/, '\\\\\1' #escape mysql LIKE special chars
-            v.gsub! /\*/, '%'
+            v.gsub!(/([%_])/, '\\\\\1') #escape mysql LIKE special chars
+            v.gsub!(/\*/, '%')
 
             cond_fragments << ["#{db_model.table_name}.#{md[1]} LIKE BINARY ?"]
             cond_values << v
