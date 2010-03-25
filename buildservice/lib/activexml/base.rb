@@ -54,6 +54,10 @@ module ActiveXML
         @error
       end
 
+      def calc_key( *args )
+         cache_key = MD5::md5( self.name + '-' + args.to_s )
+      end
+
       def find_priv(cache_time, *args )
         #FIXME: needs cleanup
         #TODO: factor out xml stuff to ActiveXML::Node
@@ -71,7 +75,7 @@ module ActiveXML
         raise "No transport defined for model #{self.name}" unless transport
         begin
 	  if cache_time
-	    cache_key = URI::escape( self.name + '-' + args.to_s )
+	    cache_key = calc_key( *args )
 	    objdata, params = Rails.cache.fetch(cache_key, :expires_in => cache_time) do
 	      transport.find( self, *args )
 	    end
@@ -102,8 +106,7 @@ module ActiveXML
       end
 
       def free_cache( *args )
-        cache_key = self.name + '-' + args.to_s
-        Rails.cache.delete(cache_key)
+        Rails.cache.delete( calc_key( *args ) )
       end
 
     end #class methods
