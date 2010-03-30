@@ -55,7 +55,7 @@ module ActiveXML
       end
 
       def calc_key( *args )
-         cache_key = MD5::md5( self.name + '-' + args.to_s )
+         MD5::md5( self.name + '-' + args.to_s )
       end
 
       def find_priv(cache_time, *args )
@@ -74,21 +74,21 @@ module ActiveXML
         transport = config.transport_for(self.name.downcase.to_sym)
         raise "No transport defined for model #{self.name}" unless transport
         begin
-	  if cache_time
-	    cache_key = calc_key( *args )
-	    objdata, params = Rails.cache.fetch(cache_key, :expires_in => cache_time) do
-	      transport.find( self, *args )
-	    end
-	  else
-	    objdata, params = transport.find( self, *args )
-	  end
-	  begin
-	    obj = self.new( objdata )
-	  rescue ActiveXML::ParseError
-	    raise "Parsing XML failed from: #{url}"
-	  end
-	  obj.instance_variable_set( '@init_options', params )
-	  return obj
+          if cache_time
+            cache_key = calc_key( *args )
+            objdata, params = Rails.cache.fetch(cache_key, :expires_in => cache_time) do
+              transport.find( self, *args )
+            end
+          else
+            objdata, params = transport.find( self, *args )
+          end
+          begin
+            obj = self.new( objdata )
+          rescue ActiveXML::ParseError
+            raise "Parsing XML failed from: #{url}"
+          end
+          obj.instance_variable_set( '@init_options', params )
+          return obj
         rescue ActiveXML::Transport::NotFoundError
           logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} ) did not find anything, return nil"
           return nil
@@ -96,13 +96,13 @@ module ActiveXML
       end
 
       def find( *args )
-	find_priv(nil, *args )
+        find_priv(nil, *args )
       end
 
       def find_cached( *args )
         opts = args.last if args.last.kind_of?(Hash) and args.last[:expires_in]
         opts = {:expires_in => 30.minutes}.merge( opts || Hash.new )
-	find_priv(opts[:expires_in], *args)
+        find_priv(opts[:expires_in], *args)
       end
 
       def free_cache( *args )
