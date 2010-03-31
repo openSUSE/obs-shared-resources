@@ -55,7 +55,7 @@ module ActiveXML
       end
 
       def calc_key( *args )
-         MD5::md5( self.name + '-' + args.to_s )
+         self.name + MD5::md5( args.to_s ).to_s
       end
 
       def find_priv(cache_time, *args )
