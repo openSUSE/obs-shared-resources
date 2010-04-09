@@ -8,8 +8,8 @@ module ActiveXML
 
     include ActiveXML::Config
 
-    # need it for test case
     attr_reader :init_options
+    attr_reader :cache_key
 
     @default_find_parameter = :name
 
@@ -55,7 +55,8 @@ module ActiveXML
       end
 
       def calc_key( *args )
-         self.name + MD5::md5( args.to_s ).to_s
+         #logger.debug "Cache key for #{args.inspect}"
+         self.name + "_" + MD5::md5( args.to_s ).to_s
       end
 
       def find_priv(cache_time, *args )
@@ -88,6 +89,7 @@ module ActiveXML
             raise "Parsing XML failed from: #{url}"
           end
           obj.instance_variable_set( '@init_options', params )
+          obj.instance_variable_set( '@cache_key', calc_key( *args ) ) if cache_time
           return obj
         rescue ActiveXML::Transport::NotFoundError
           logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} ) did not find anything, return nil"
@@ -138,6 +140,7 @@ module ActiveXML
         @data = nil
       else
         transport.save self, opt
+        Rails.cache.delete @cache_key if @cache_key
       end
       return true
     end
@@ -146,6 +149,7 @@ module ActiveXML
       logger.debug "Delete #{self.class}, opt: #{opt.inspect}"
       transport = TransportMap.transport_for(self.class.name.downcase.to_sym)
       transport.delete self, opt
+      Rails.cache.delete @cache_key if @cache_key
       return true
     end
 

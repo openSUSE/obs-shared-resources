@@ -91,7 +91,7 @@ module ActiveXML
 
           logger.debug "setting up transport for model #{model}"
           uri = URI( target )
-          @transport_obj_map[model] = transport = spawn_transport( uri.scheme, opt )
+          @transport_obj_map[model] = spawn_transport( uri.scheme, opt )
           replace_server_if_needed( uri )
           @mapping[model] = {:target_uri => uri, :opt => opt}
         end
