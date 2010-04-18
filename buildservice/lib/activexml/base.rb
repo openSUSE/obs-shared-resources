@@ -65,6 +65,7 @@ module ActiveXML
         if args[0].kind_of? Hash
           hash = Hash.new
           args[0].each do |key, value|
+            raise ArgumentError, "nil value given" if key.nil? or value.nil?
             if value.kind_of? Array
               hash[key.to_sym] = value
             else
