@@ -54,21 +54,35 @@ module ActiveXML
         @error
       end
 
-      def calc_key( *args )
+      def prepare_args( args )
+        if args[0].kind_of? String
+          args[1] ||= {}
+          first_arg = args.shift
+          hash = args.shift
+          hash[@default_find_parameter] = first_arg
+          args.insert(0, hash)
+        end
+        if args[0].kind_of? Hash
+          hash = Hash.new
+          args[0].each do |key, value|
+            hash[key.to_sym] = value.to_s 
+          end
+          args[0] = hash
+        end
+
+        #logger.debug "prepared find args: #{args.inspect}"
+        return args
+      end
+
+      def calc_key( args )
          #logger.debug "Cache key for #{args.inspect}"
          self.name + "_" + MD5::md5( args.to_s ).to_s
       end
 
-      def find_priv(cache_time, *args )
+      def find_priv(cache_time, args )
         #FIXME: needs cleanup
         #TODO: factor out xml stuff to ActiveXML::Node
-        #logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} )"
-
-        args[1] ||= {}
-        opt = args[0].kind_of?(Hash) ? args[0] : args[1]
-        opt[@default_find_parameter] = args[0] if( args[0].kind_of? String )
-
-        #logger.debug "prepared find args: #{args.inspect}"
+        logger.debug "#{self.name}.find( #{args.inspect})"
 
         #TODO: somehow we need to set the transport again, as it was not set when subclassing.
         # only happens with rails >= 2.3.4 and config.cache_classes = true
@@ -76,7 +90,7 @@ module ActiveXML
         raise "No transport defined for model #{self.name}" unless transport
         begin
           if cache_time
-            cache_key = calc_key( *args )
+            cache_key = calc_key( args )
             objdata, params = Rails.cache.fetch(cache_key, :expires_in => cache_time) do
               transport.find( self, *args )
             end
@@ -89,7 +103,7 @@ module ActiveXML
             raise "Parsing XML failed from: #{url}"
           end
           obj.instance_variable_set( '@init_options', params )
-          obj.instance_variable_set( '@cache_key', calc_key( *args ) ) if cache_time
+          obj.instance_variable_set( '@cache_key', calc_key( args ) ) if cache_time
           return obj
         rescue ActiveXML::Transport::NotFoundError
           logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} ) did not find anything, return nil"
@@ -98,17 +112,22 @@ module ActiveXML
       end
 
       def find( *args )
-        find_priv(nil, *args )
+        find_priv(nil, prepare_args(args) )
       end
 
       def find_cached( *args )
-        opts = args.last if args.last.kind_of?(Hash) and args.last[:expires_in]
-        opts = {:expires_in => 30.minutes}.merge( opts || Hash.new )
-        find_priv(opts[:expires_in], *args)
+        expires_in = 30.minutes
+        if args.last.kind_of?(Hash) and args.last[:expires_in]
+          expires_in = args.last[:expires_in] 
+          args.last.delete :expires_in
+        end
+        find_priv(expires_in, prepare_args(args))
       end
 
       def free_cache( *args )
-        Rails.cache.delete( calc_key( *args ) )
+        args = prepare_args( args)
+	logger.debug "#{self.name}.free( #{args.inspect})"
+        Rails.cache.delete( calc_key( args ) )
       end
 
     end #class methods

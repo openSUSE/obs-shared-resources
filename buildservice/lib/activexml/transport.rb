@@ -288,7 +288,7 @@ module ActiveXML
       # returns object
       def find( model, *args )
 
-        logger.debug "[REST] find( #{model.inspect}, #{args} )"
+        logger.debug "[REST] find( #{model.inspect}, #{args.inspect} )"
         params = Hash.new
         data = nil
         symbolified_model = model.name.downcase.to_sym
@@ -297,7 +297,7 @@ module ActiveXML
         case args[0]
         when Symbol
           #logger.debug "Transport.find: using symbol"
-          #raise "Illegal symbol, must be :all (or String/Hash)" unless args[0] == :all
+          #raise ArgumentError, "Illegal symbol, must be :all (or String/Hash)" unless args[0] == :all
           uri = options[args[0]]
           if args.length > 1
             #:conditions triggers atm. always a post request, the conditions are
@@ -308,11 +308,7 @@ module ActiveXML
             params = args[1].merge params
           end
         when String
-          #logger.debug "Transport.find: using string"
-          params[:name] = args[0]
-          if args.length > 1
-            params = args[1].merge params
-          end
+          raise ArgumentError.new "find with string is no longer allowed #{args.inspect}"
         when Hash
           #logger.debug "Transport.find: using hash"
           params = args[0]
@@ -320,6 +316,7 @@ module ActiveXML
           raise "Illegal first parameter, must be Symbol/String/Hash"
         end
 
+        #logger.debug "params #{params.inspect}"
         #logger.debug "uri is: #{uri}"
         url = substitute_uri( uri, params )
 
