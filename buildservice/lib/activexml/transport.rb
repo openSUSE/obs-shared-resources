@@ -222,7 +222,7 @@ module ActiveXML
         query_fragments = Array.new
         opt_hash.each do |k,v|
           query_fragments << "@#{k}='#{v}'"
-        end
+        end if opt_hash
         query = query_fragments.join( " and " )
         logger.debug "[BSSQL] query_from_options: query is: '#{query}'"
         return query
