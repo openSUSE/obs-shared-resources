@@ -336,6 +336,23 @@ module ActiveXML
       return node
     end
 
+    def value( symbol) 
+      return nil unless data
+
+      symbols = symbol.to_s
+
+      if data.attributes[symbols]
+        return data.attributes[symbols]
+      end
+
+      elem = data.find_first(symbols)
+      if elem
+        return elem.content
+      end
+
+      return nil
+    end
+
     def method_missing( symbol, *args, &block )
       #logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
 
