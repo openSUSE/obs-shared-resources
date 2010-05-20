@@ -83,8 +83,8 @@ module ActiveXML
       end
 
       def calc_key( args )
-         #logger.debug "Cache key for #{args.inspect}"
-         self.name + "_" + MD5::md5( args.to_s ).to_s
+        #logger.debug "Cache key for #{args.inspect}"
+        self.name + "_" + MD5::md5( args.to_s ).to_s
       end
 
       def find_priv(cache_time, args )
@@ -107,8 +107,8 @@ module ActiveXML
           end
           begin
             obj = self.new( objdata )
-          rescue ActiveXML::ParseError
-            raise "Parsing XML failed from: #{url}"
+          rescue ActiveXML::ParseError => e
+            raise "Parsing XML failed: #{e.message}"
           end
           obj.instance_variable_set( '@init_options', params )
           obj.instance_variable_set( '@cache_key', calc_key( args ) ) if cache_time
@@ -134,7 +134,7 @@ module ActiveXML
 
       def free_cache( *args )
         args = prepare_args( args)
-	logger.debug "#{self.name}.free( #{args.inspect})"
+        logger.debug "#{self.name}.free( #{args.inspect})"
         Rails.cache.delete( calc_key( args ) )
       end
 
