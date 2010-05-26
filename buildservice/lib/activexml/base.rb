@@ -134,7 +134,7 @@ module ActiveXML
 
       def free_cache( *args )
         args = prepare_args( args)
-        logger.debug "#{self.name}.free( #{args.inspect})"
+        #logger.debug "#{self.name}.free( #{args.inspect})"
         Rails.cache.delete( calc_key( args ) )
       end
 
