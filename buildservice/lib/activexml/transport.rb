@@ -486,7 +486,6 @@ module ActiveXML
             raise "PUT without data" if opt[:data].nil?
             http_response = @http.put path, opt[:data], @http_header
           when /post/i
-            raise "POST without data" if opt[:data].nil?
             http_response = @http.post path, opt[:data], @http_header
           when /delete/i
             http_response = @http.delete path, @http_header
