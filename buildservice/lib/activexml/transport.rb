@@ -479,14 +479,16 @@ module ActiveXML
           logger.debug "http_do ##{retries}: method: #{method} url: " +
             "http#{"s" if @http.use_ssl}://#{url.host}:#{url.port}#{path}"
 
+          clength = { "Content-Length" => "0" }
+          clength["Content-Length"] = opt[:data].length().to_s() unless opt[:data].nil?
+ 
           case method
           when /get/i
             http_response = @http.get path, @http_header
           when /put/i
-            raise "PUT without data" if opt[:data].nil?
-            http_response = @http.put path, opt[:data], @http_header
+            http_response = @http.put path, opt[:data], @http_header.merge clength
           when /post/i
-            http_response = @http.post path, opt[:data], @http_header
+            http_response = @http.post path, opt[:data], @http_header.merge clength
           when /delete/i
             http_response = @http.delete path, @http_header
           else
