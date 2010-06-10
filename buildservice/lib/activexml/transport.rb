@@ -486,9 +486,9 @@ module ActiveXML
           when /get/i
             http_response = @http.get path, @http_header
           when /put/i
-            http_response = @http.put path, opt[:data], @http_header.merge clength
+            http_response = @http.put path, opt[:data], @http_header.merge(clength)
           when /post/i
-            http_response = @http.post path, opt[:data], @http_header.merge clength
+            http_response = @http.post path, opt[:data], @http_header.merge(clength)
           when /delete/i
             http_response = @http.delete path, @http_header
           else
