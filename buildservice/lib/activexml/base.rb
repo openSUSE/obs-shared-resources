@@ -87,10 +87,10 @@ module ActiveXML
         self.name + "_" + MD5::md5( args.to_s ).to_s
       end
 
-      def find_priv(cache_time, args )
+      def find_priv(cache_time, *args )
         #FIXME: needs cleanup
         #TODO: factor out xml stuff to ActiveXML::Node
-        logger.debug "#{self.name}.find( #{args.inspect})"
+        logger.debug "#{self.name}.find( #{cache_time.inspect}, #{args.join(', ')})"
 
         #TODO: somehow we need to set the transport again, as it was not set when subclassing.
         # only happens with rails >= 2.3.4 and config.cache_classes = true
@@ -100,10 +100,11 @@ module ActiveXML
           if cache_time
             cache_key = calc_key( args )
             objdata, params = Rails.cache.fetch(cache_key, :expires_in => cache_time) do
-              transport.find( self, *args )
+              transport.find( self, *(prepare_args(args)) )
             end
           else
-            objdata, params = transport.find( self, *args )
+
+            objdata, params = transport.find( self, *(prepare_args(args)) )
           end
           begin
             obj = self.new( objdata )
@@ -120,7 +121,7 @@ module ActiveXML
       end
 
       def find( *args )
-        find_priv(nil, prepare_args(args) )
+        find_priv(nil, *args )
       end
 
       def find_cached( *args )
@@ -129,13 +130,17 @@ module ActiveXML
           expires_in = args.last[:expires_in] 
           args.last.delete :expires_in
         end
-        find_priv(expires_in, prepare_args(args))
+        find_priv(expires_in, *args)
       end
 
       def free_cache( *args )
-        args = prepare_args( args)
-        #logger.debug "#{self.name}.free( #{args.inspect})"
-        Rails.cache.delete( calc_key( args ) )
+        # modify copy of args as it might be still used in the calling method
+        free_args = args.dup
+        if free_args.last.kind_of?(Hash) and free_args.last[:expires_in]
+          free_args[free_args.length-1] = free_args.last.dup
+          free_args.last.delete :expires_in
+        end
+        Rails.cache.delete( calc_key( free_args ) )
       end
 
     end #class methods
