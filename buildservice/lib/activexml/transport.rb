@@ -537,10 +537,12 @@ module ActiveXML
           raise UnauthorizedError, http_response.read_body
         when Net::HTTPForbidden
           raise ForbiddenError, http_response.read_body
-        when Net::HTTPClientError, Net::HTTPServerError
-          raise Error, http_response.read_body
+        when Net::HTTPGatewayTimeOut
+          raise Timeout::Error 
         end
-        raise Error, http_response.read_body
+        message = http_response.read_body
+        message = http_response.to_s if message.blank?
+        raise Error, message
       end
 
     end
