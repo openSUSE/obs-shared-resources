@@ -378,7 +378,13 @@ module ActiveXML
         return data.attributes[symbols]
       end
 
-      if !data.find_first(symbols).nil?
+      begin
+        datasym = data.find_first(symbols)
+      rescue LibXML::XML::Error
+        return unless @throw_on_method_missing
+        super( symbol, *args )
+      end
+      unless datasym.nil?
         xpath = args.shift
         query = xpath ? "#{symbol}[#{xpath}]" : symbols
         #logger.debug "method_missing: query is '#{query}'"
