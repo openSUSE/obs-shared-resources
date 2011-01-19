@@ -147,10 +147,8 @@ module ActiveXML
 
             #FIXME: hack for project parameter in Package.find
             if( symbolified_model == :package and md[1] == "project" )
-              join_fragments << "db_projects"
-
-              cond_fragments << ["db_packages.db_project_id = db_projects.id"]
-              cond_fragments << ["db_projects.name = ?"]
+              cond_fragments << ["db_packages.db_project_id = prj.id"]
+              cond_fragments << ["prj.name = ?"]
 
               cond_values << v
               next
