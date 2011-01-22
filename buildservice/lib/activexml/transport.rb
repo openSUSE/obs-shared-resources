@@ -311,7 +311,13 @@ module ActiveXML
           raise ArgumentError.new "find with string is no longer allowed #{args.inspect}"
         when Hash
           #logger.debug "Transport.find: using hash"
-          params = args[0]
+          if args[0].has_key? :predicate and args[0].has_key? :what
+            # avoid exceeding url length on search
+            data = URI.escape("match=" + args[0][:predicate])
+            params = { :what => args[0][:what] }
+          else
+            params = args[0]
+          end
         else
           raise "Illegal first parameter, must be Symbol/String/Hash"
         end
