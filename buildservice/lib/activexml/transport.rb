@@ -313,14 +313,9 @@ module ActiveXML
         when Hash
           #logger.debug "Transport.find: using hash"
           if args[0].has_key? :predicate and args[0].has_key? :what
-            # avoid exceeding url length on search
-            data = URI.escape(args[0][:predicate])
-puts "XXXXX", data
-            params = { :what => args[0][:what] }
             own_mimetype = "application/x-www-form-urlencoded"
-          else
-            params = args[0]
           end
+          params = args[0]
         else
           raise "Illegal first parameter, must be Symbol/String/Hash"
         end
@@ -328,7 +323,10 @@ puts "XXXXX", data
         #logger.debug "params #{params.inspect}"
         #logger.debug "uri is: #{uri}"
         url = substitute_uri( uri, params )
-
+        if own_mimetype
+          data = url.query
+          url.query = nil
+        end
         #use get-method if no conditions defined <- no post-data is set.
         if data.nil?
           #logger.debug"[REST] Transport.find using GET-method"
