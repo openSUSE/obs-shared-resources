@@ -291,6 +291,7 @@ module ActiveXML
         logger.debug "[REST] find( #{model.inspect}, #{args.inspect} )"
         params = Hash.new
         data = nil
+        own_mimetype = nil
         symbolified_model = model.name.downcase.to_sym
         uri = ActiveXML::Config::TransportMap.target_for( symbolified_model )
         options = ActiveXML::Config::TransportMap.options_for( symbolified_model )
@@ -313,8 +314,10 @@ module ActiveXML
           #logger.debug "Transport.find: using hash"
           if args[0].has_key? :predicate and args[0].has_key? :what
             # avoid exceeding url length on search
-            data = URI.escape("match=" + args[0][:predicate])
+            data = URI.escape(args[0][:predicate])
+puts "XXXXX", data
             params = { :what => args[0][:what] }
+            own_mimetype = "application/x-www-form-urlencoded"
           else
             params = args[0]
           end
@@ -335,7 +338,7 @@ module ActiveXML
           #use post-method
           logger.debug"[REST] Transport.find using POST-method"
           #logger.debug"[REST] POST-data as xml: #{data.to_s}"
-          objdata = http_do( 'post', url, :data => data.to_s)
+          objdata = http_do( 'post', url, :data => data.to_s, :content_type => own_mimetype)
           raise RuntimeError.new("POST to %s returned no data" % url) if objdata.empty?
         end
         return [objdata, params]
@@ -487,6 +490,7 @@ module ActiveXML
 
           clength = { "Content-Length" => "0" }
           clength["Content-Length"] = opt[:data].length().to_s() unless opt[:data].nil?
+          clength["Content-Type"] = opt[:content_type] unless opt[:content_type].nil?
  
           case method
           when /get/i
