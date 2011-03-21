@@ -80,6 +80,11 @@ module ActiveXML
           @default_servers[transport.to_s] = location
         end
 
+        def set_default_protocol( protocol )
+          logger.debug "default_protocol: #{protocol}"
+          @default_protocol = protocol
+        end
+
         def connect( model, target, opt={} )
           opt.each do |key,value|
             # workaround for :write_through option. fix would be to not configure
@@ -101,6 +106,8 @@ module ActiveXML
             host, port = get_default_server(uri.scheme)
             uri.host = host
             uri.port = port unless port.nil?
+            uri.scheme = "http"
+            uri.scheme = @default_protocol if @default_protocol
           end
         end
 
