@@ -383,9 +383,7 @@ module ActiveXML
 
         #set default host if not set in uri
         if not url.host
-          host, port = ActiveXML::Config::TransportMap.get_default_server( "rest" )
-          url.host = host
-          url.port = port unless port.nil?
+          url.scheme, url.host, url.port = ActiveXML::Config::TransportMap.get_default_server("rest")
         end
 
         logger.debug "--> direct_http url: #{url.inspect}"
@@ -475,8 +473,7 @@ module ActiveXML
           keepalive = true
           if not @http
             @http = Net::HTTP.new(url.host, url.port)
-            # FIXME: we should get the protocol here instead of depending on the port
-            @http.use_ssl = true if url.port == 443
+            @http.use_ssl = true if url.scheme == "https"
             @http.start
           end
           @http.read_timeout = opt[:timeout]

@@ -89,18 +89,16 @@ module ActiveXML
             replace_server_if_needed( opt[key] )
           end
 
-          logger.debug "setting up transport for model #{model}"
           uri = URI( target )
           @transport_obj_map[model] = spawn_transport( uri.scheme, opt )
           replace_server_if_needed( uri )
+          logger.debug "setting up transport for model #{model}: #{uri} opts: #{opt}"
           @mapping[model] = {:target_uri => uri, :opt => opt}
         end
 
         def replace_server_if_needed( uri )
           if not uri.host
-            host, port = get_default_server(uri.scheme)
-            uri.host = host
-            uri.port = port unless port.nil?
+            uri.scheme, uri.host, uri.port = get_default_server(uri.scheme)
           end
         end
 
@@ -114,11 +112,10 @@ module ActiveXML
 
         def get_default_server( transport )
           ds = @default_servers[transport.to_s]
-          if ds =~ /(.*?):(.*)/
-            return $1, $2.to_i
-          else
-            return ds, nil
-          end
+          ds_uri = URI.parse(ds)
+          return ds_uri.scheme, ds_uri.host, ds_uri.port
+        rescue
+          return nil, ds, nil
         end
 
         def register_transport( klass, proto )
