@@ -276,6 +276,7 @@ module ActiveXML
       end
 
       def target_uri=(uri)
+        uri.scheme = "http"
         @target_uri = uri
       end
 
@@ -402,7 +403,7 @@ module ActiveXML
         #logger.debug "[REST] args is now: #{params.inspect}"
 
         u = uri.clone
-#        u.scheme = "http"
+        u.scheme = "http"
         u.path = URI.escape(uri.path.split(/\//).map { |x| x =~ /^:(\w+)/ ? params[$1.to_sym] : x }.join("/"))
         if uri.query
           new_pairs = []
