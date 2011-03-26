@@ -84,6 +84,7 @@ module ActiveXML
         # only happens with rails >= 2.3.4 and config.cache_classes = true
         transport = config.transport_for(self.name.downcase.to_sym)
         raise "No transport defined for model #{self.name}" unless transport
+        cache_key = nil
         begin
           if cache_time
             cache_key = calc_key( args )
@@ -99,8 +100,8 @@ module ActiveXML
           rescue ActiveXML::ParseError => e
             raise "Parsing XML failed: #{e.message}"
           end
+          obj.instance_variable_set( '@cache_key', cache_key ) if cache_key
           obj.instance_variable_set( '@init_options', params )
-          obj.instance_variable_set( '@cache_key', calc_key( args ) ) if cache_time
           return obj
         rescue ActiveXML::Transport::NotFoundError
           logger.debug "#{self.name}.find( #{args.map {|a| a.inspect}.join(', ')} ) did not find anything, return nil"
