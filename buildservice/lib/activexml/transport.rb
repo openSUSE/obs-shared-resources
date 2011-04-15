@@ -457,14 +457,15 @@ module ActiveXML
       def http_do( method, url, opt={} )
         defaults = {:timeout => 60}
         opt = defaults.merge opt
+        max_retries = 1
 
         case method
         when /put/i, /post/i, /delete/i
-          max_retries = 1
           @http.finish if @http
           @http = nil
         when /get/i
-          max_retries = 5
+          # if the http is existed before, we shall retry
+          max_retries = 2 if @http
         end
         retries = 0
         begin
@@ -511,7 +512,7 @@ module ActiveXML
             logger.error "--> caught #{err.class}: #{err.message}, retrying with new HTTP connection"
             retry
           end
-          raise err
+          raise Error, "Connection failed #{err.class}: #{err.message}"
         rescue SystemCallError => err
           begin
             @http.finish
@@ -544,6 +545,8 @@ module ActiveXML
           raise ForbiddenError, http_response.read_body
         when Net::HTTPGatewayTimeOut
           raise Timeout::Error 
+        when Net::HTTPBadGateway
+          raise Timeout::Error
         end
         message = http_response.read_body
         message = http_response.to_s if message.blank?
