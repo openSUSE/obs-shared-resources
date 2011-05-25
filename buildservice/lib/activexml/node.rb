@@ -203,6 +203,17 @@ module ActiveXML
       return result
     end
 
+    def each_with_index
+      result = Array.new
+      index = 0
+      data.each_element do |e|
+        result << node = create_node_with_relations(e)
+        yield node, index if block_given?
+        index = index + 1
+      end
+      return result
+    end
+
 
     def logger
       self.class.logger
