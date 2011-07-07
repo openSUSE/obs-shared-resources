@@ -332,7 +332,7 @@ module ActiveXML
 
     def merge_data( elem_list )
       elem_list.each do |elem|
-        data << elem
+        data << data.doc.import(elem)
       end
     end
 
