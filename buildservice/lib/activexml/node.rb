@@ -323,7 +323,7 @@ module ActiveXML
           redo
         when :after_element
           elem_cache << elem
-          delete_element elem
+          elem.remove!
         end
       end
 
