@@ -72,7 +72,7 @@ module ActiveXML
 
       def calc_key( args )
         #logger.debug "Cache key for #{args.inspect}"
-        self.name + "_" + MD5::md5( args.to_s ).to_s
+        self.name + "_" + Digest::MD5.hexdigest( args.to_s )
       end
 
       def find_priv(cache_time, *args )
