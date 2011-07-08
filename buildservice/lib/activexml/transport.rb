@@ -343,19 +343,19 @@ module ActiveXML
       end
 
       def create(object, opt={})
-        logger.debug "creating object #{object.class} (#{object.init_options.inspect}) to api:\n #{object.data}"
+        logger.debug "creating object #{object.class} (#{object.init_options.inspect}) to api:\n #{object.dump_xml}"
         url = substituted_uri_for( object, :create, opt )
         http_do 'post', url, :data => object.dump_xml
       end
 
       def save(object, opt={})
-        logger.debug "saving object #{object.class} (#{object.init_options.inspect}) to api:\n #{object.data}"
+        logger.debug "saving object #{object.class} (#{object.init_options.inspect}) to api:\n #{object.dump_xml}"
         url = substituted_uri_for( object )
         http_do 'put', url, :data => object.dump_xml
       end
 
       def delete(object, opt={})
-        logger.debug "delete object #{object.class} (#{object.init_options.inspect}) to api:\n #{object.data}"
+        logger.debug "delete object #{object.class} (#{object.init_options.inspect}) to api:\n #{object.dump_xml}"
         url = substituted_uri_for( object, :delete, opt )
         http_do 'delete', url
       end

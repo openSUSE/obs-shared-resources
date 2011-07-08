@@ -124,6 +124,8 @@ module ActiveXML
       elsif data.kind_of? Hash
         #create new
         @data = self.class.make_stub(data)
+      elsif data.kind_of? LibXMLNode
+        @data = data.data
       else
         raise "constructor needs either XML::Node, String or Hash"
       end
@@ -166,6 +168,7 @@ module ActiveXML
       end
       @data
     end
+    #protected :data
 
     def text
       #puts 'text -%s- -%s-' % [data.inner_xml, data.content]
@@ -254,6 +257,7 @@ module ActiveXML
     def add_node(node)
       xmlnode = LibXMLNode.new(node).data
       data << data.doc.import(xmlnode)
+      xmlnode
     end
 
     def add_element ( element, attrs=nil )
@@ -301,6 +305,10 @@ module ActiveXML
         e = data.find_first(elem.to_s)
         e.remove! if e
       end
+    end
+
+    def set_attribute( name, value)
+       data.attributes[name] = value
     end
 
     #removes all elements after the last named from @data and return in list
@@ -422,3 +430,5 @@ module ActiveXML
   end
 
 end
+
+LibXML::XML::Error.set_handler(&LibXML::XML::Error::QUIET_HANDLER)
