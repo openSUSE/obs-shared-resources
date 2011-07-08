@@ -1,7 +1,6 @@
 require 'net/http'
 require 'uri'
 require 'base64'
-require 'rexml/document'
 
 module Suse
   class Frontend
@@ -229,12 +228,12 @@ module Suse
     def error_doc( content )
       error_doc = nil
       begin
-        error_doc = REXML::Document.new( content )
-      rescue REXML::ParseException
+        error_doc = ActiveXML::Base.new( content )
+      rescue 
         logger.debug "Suse::Frontend: parse exception when creating error doc"
         error_doc = wrap_xml( :content => content )
       end
-      if error_doc.root.nil? or not %w|error status|.include? error_doc.root.name
+      if !error_doc.has_elements? or not %w|error status|.include? error_doc.element_name
         error_doc = wrap_xml( :content => content )
       end
       error_doc
