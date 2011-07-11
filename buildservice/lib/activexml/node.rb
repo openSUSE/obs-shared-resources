@@ -372,6 +372,13 @@ module ActiveXML
       return nil
     end
 
+    def find( symbol, &block ) 
+      symbols = symbol.to_s
+      data.find(symbols).each do |e|
+        block.call(create_node_with_relations(e))
+      end 
+    end
+
     def method_missing( symbol, *args, &block )
       #logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
 
