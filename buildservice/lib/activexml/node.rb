@@ -2,46 +2,11 @@ require 'xml'
 
 module ActiveXML
 
-  #basic outline of the xml parser abstraction
-  module XMLAdapters
-    # this adapter defines all available methods. specialized adapters subclass from it.
-    # as much methods as possible should be implemented using more basic methods,
-    # even if the implementations are unoptimized, so that the specialized adapters
-    # can be implemented with low effort.
-    class AbstractAdapter
-      def has_element?( name )
-      end
-
-      def append_node( node )
-      end
-      alias_method '<<', :append_node
-
-      def add_node_after( node, prev_name )
-      end
-
-      def add_node_before( node, succ_name )
-      end
-
-      def remove_node( node )
-      end
-    end
-
-    class RexmlTreeAdapter < AbstractAdapter
-    end
-
-    class REXMLStreamAdapter < AbstractAdapter
-    end
-  end
-
   class LibXMLNode
 
     @@elements = {}
 
     class << self
-
-      def setup
-        @@logger = ActiveXML::Config.logger
-      end
 
       def get_class(element_name)
         # FIXME: lines below don't work with relations. the related model has to
@@ -85,30 +50,6 @@ module ActiveXML
         end
       end
 
-      def xml_attr_reader (*attrs)
-        attrs.each do |attr|
-          class_eval do
-            define_method(attr.to_s) do
-              data.attributes[attr.to_s]
-            end
-          end
-        end
-      end
-
-      def xml_attr_writer (*attrs)
-        attrs.each do |attr|
-          class_eval do
-            define_method(attr.to_s+'=') do |new_value|
-#              if data.attributes[attr.to_s].nil?
-#                data.add_attribute attr.to_s, new_value.to_s
-#              else
-                data.attributes[attr.to_s] = new_value.to_s
-#              end
-            end
-          end
-        end
-      end
-
     end
 
     #instance methods
@@ -125,7 +66,7 @@ module ActiveXML
         #create new
         @data = self.class.make_stub(data)
       elsif data.kind_of? LibXMLNode
-        @data = data.data
+        self.raw_data = data.dump_xml
       else
         raise "constructor needs either XML::Node, String or Hash"
       end
@@ -152,6 +93,7 @@ module ActiveXML
       else
         if ActiveXML::Config.lazy_evaluation
           @raw_data = data.clone
+          @data = nil
         else
           parse(data)
         end
@@ -164,11 +106,13 @@ module ActiveXML
 
     def data
       if !@data && @raw_data
-         parse(@raw_data)
+        parse(@raw_data)
+        # save memory
+        @raw_data = nil
       end
       @data
     end
-    protected :data
+    private :data
 
     def text
       #puts 'text -%s- -%s-' % [data.inner_xml, data.content]
@@ -179,51 +123,44 @@ module ActiveXML
       data.content = what.to_xs
     end
 
-    def define_iterator_for_element( elem )
-      logger.debug "2> starting to define iterator for element '#{elem}'"
-
-      eval <<-end_eval
-      def each_#{elem}
-        return nil if not has_element? '#{elem}'
-        result = Array.new
-        data.elements.each('#{elem}') do |e|
-          result << node = create_node_with_relations(e)
-          yield node if block_given?
-        end
-        result
-      end
-      end_eval
-    end
-    #private :define_iterator_for_element
-
-
-    def each
+    def each(symbol = nil)
       result = Array.new
-      data.each_element do |e|
-        result << node = create_node_with_relations(e)
+      each_with_index(symbol) do |node, index|
+        result << node
         yield node if block_given?
       end
       return result
     end
 
-    def each_with_index
-      result = Array.new
+    def each_with_index(symbol = nil)
+      unless block_given?
+        raise RuntimeError "use each instead"
+      end
       index = 0
-      data.each_element do |e|
-        result << node = create_node_with_relations(e)
-        yield node, index if block_given?
+      nodes = Array.new
+      if symbol.nil?
+        data.each_element { |e| nodes << e }
+      else
+        data.find(symbol.to_s).each { |e| nodes << e }
+      end
+      nodes.each do |e|
+        yield create_node_with_relations(e), index
         index = index + 1
       end
-      return result
     end
 
+    def find_first(symbol)
+      data.find(symbol.to_s).each do |e|
+        return create_node_with_relations(e)
+      end
+      return nil
+    end
 
     def logger
       self.class.logger
     end
 
     def to_s
-      # rexml: data.texts.map {|t| t.value}.to_s or ""
       ret = ''
       data.each do |node|
         if node.node_type == LibXML::XML::Node::TEXT_NODE
@@ -255,8 +192,9 @@ module ActiveXML
     end
 
     def add_node(node)
-      xmlnode = LibXMLNode.new(node).data
-      data << data.doc.import(xmlnode)
+      raise ArgumentError, "argument must be a string" unless node.kind_of? String
+      xmlnode = data.doc.import(XML::Parser.string(node.to_s).parse.root)
+      data << xmlnode
       xmlnode
     end
 
@@ -298,8 +236,10 @@ module ActiveXML
 
     def delete_element( elem )
       if elem.kind_of? LibXMLNode
-        elem.data.remove!
+        raise RuntimeError, "NO GOOD IDEA!" unless self.internal_data.doc == elem.internal_data.doc
+        elem.internal_data.remove!
       elsif elem.kind_of? LibXML::XML::Node
+        raise RuntimeError, "this should be obsolete!!!"
         elem.remove!
       else
         e = data.find_first(elem.to_s)
@@ -309,39 +249,6 @@ module ActiveXML
 
     def set_attribute( name, value)
        data.attributes[name] = value
-    end
-
-    #removes all elements after the last named from @data and return in list
-    def split_data_after( element_name )
-      return false if not element_name
-
-      element_name = element_name.to_s
-
-      state = :before_element
-      elem_cache = []
-      data.each_element do |elem|
-        case state
-        when :before_element
-          next if elem.name != element_name
-          state = :element
-          redo
-        when :element
-          next if elem.name == element_name
-          state = :after_element
-          redo
-        when :after_element
-          elem_cache << elem
-          elem.remove!
-        end
-      end
-
-      elem_cache
-    end
-
-    def merge_data( elem_list )
-      elem_list.each do |elem|
-        data << data.doc.import(elem)
-      end
     end
 
     def create_node_with_relations( element )
@@ -372,15 +279,8 @@ module ActiveXML
       return nil
     end
 
-    def find( symbol, &block ) 
-      symbols = symbol.to_s
-      data.find(symbols).each do |e|
-        block.call(create_node_with_relations(e))
-      end 
-    end
-
     def method_missing( symbol, *args, &block )
-      #logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
+      logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
 
       symbols = symbol.to_s
       if( symbols =~ /^each_(.*)$/ )
@@ -431,6 +331,12 @@ module ActiveXML
       return unless @throw_on_method_missing
       super( symbol, *args )
     end
+
+    # stay away from this
+    def internal_data #nodoc
+      data
+    end
+    protected :internal_data
   end
 
   class XMLNode < LibXMLNode
