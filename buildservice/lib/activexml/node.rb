@@ -168,7 +168,7 @@ module ActiveXML
       end
       @data
     end
-    #protected :data
+    protected :data
 
     def text
       #puts 'text -%s- -%s-' % [data.inner_xml, data.content]
