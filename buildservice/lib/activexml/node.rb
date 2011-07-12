@@ -104,6 +104,10 @@ module ActiveXML
       data.name
     end
 
+    def element_name=(name)
+      data.name = name
+    end
+
     def data
       if !@data && @raw_data
         parse(@raw_data)
