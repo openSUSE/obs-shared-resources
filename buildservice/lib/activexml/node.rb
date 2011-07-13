@@ -185,7 +185,7 @@ module ActiveXML
     end
 
     def marshal_load(dumped)
-      @throw_on_method_missing, @node_cache, @raw_data = *dumped.shift(3)
+      @throw_on_method_missing, @node_cache, @raw_data = dumped
       @data = nil
     end
 
