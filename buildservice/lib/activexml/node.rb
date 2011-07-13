@@ -30,14 +30,13 @@ module ActiveXML
           raise CreationError, "Tried to create document without opt parameter"
         end
         root_tag_name = self.name.downcase
-        doc = XML::Document.new
-        doc.root = XML::Node.new root_tag_name
-        doc.root['name'] = opt[:name]
-        doc.root['created'] = opt[:created_at] if opt[:created_at]
-        doc.root['updated'] = opt[:updated_at] if opt[:updated_at]
-        doc.root << XML::Node.new('title')
-        doc.root << XML::Node.new('description')
-        doc.root
+        doc = ActiveXML::Base.new("<#{root_tag_name}/>")
+        doc.set_attriute('name', opt[:name])
+        doc.set_attribute('created', opt[:created_at]) if opt[:created_at]
+        doc.set_attribute('updated', opt[:updated_at]) if opt[:updated_at]
+        doc.add_element 'title'
+        doc.add_element 'description'
+        doc
       end
 
       def logger
@@ -64,7 +63,14 @@ module ActiveXML
         self.raw_data = data
       elsif data.kind_of? Hash
         #create new
-        @data = self.class.make_stub(data)
+        stub = self.class.make_stub(data)
+        if stub.kind_of? String
+          self.raw_data = stub
+        elsif data.kind_of? LibXMLNode
+          self.raw_data = data.dump_xml
+        else
+          raise RuntimeError "make_stub should return LibXMLNode or String" 
+        end
       elsif data.kind_of? LibXMLNode
         self.raw_data = data.dump_xml
       else
