@@ -31,7 +31,7 @@ module ActiveXML
         end
         root_tag_name = self.name.downcase
         doc = ActiveXML::Base.new("<#{root_tag_name}/>")
-        doc.set_attriute('name', opt[:name])
+        doc.set_attribute('name', opt[:name])
         doc.set_attribute('created', opt[:created_at]) if opt[:created_at]
         doc.set_attribute('updated', opt[:updated_at]) if opt[:updated_at]
         doc.add_element 'title'
@@ -66,10 +66,10 @@ module ActiveXML
         stub = self.class.make_stub(data)
         if stub.kind_of? String
           self.raw_data = stub
-        elsif data.kind_of? LibXMLNode
-          self.raw_data = data.dump_xml
+        elsif stub.kind_of? LibXMLNode
+          self.raw_data = stub.dump_xml
         else
-          raise RuntimeError "make_stub should return LibXMLNode or String" 
+          raise RuntimeError, "make_stub should return LibXMLNode or String, was #{stub.inspect}"
         end
       elsif data.kind_of? LibXMLNode
         self.raw_data = data.dump_xml
