@@ -145,13 +145,12 @@ module ActiveXML
     end
 
     def marshal_dump
-      a = super
-      a.push(@init_options)
+      [super, @init_options]
     end
 
     def marshal_load(dumped)
-      super
-      @init_options = *dumped.shift(1)
+      sdata, @init_options = dumped
+      super(sdata)
     end
 
     def save(opt={})
