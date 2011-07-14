@@ -69,7 +69,7 @@ module ActiveXML
         elsif stub.kind_of? LibXMLNode
           self.raw_data = stub.dump_xml
         else
-          raise RuntimeError, "make_stub should return LibXMLNode or String, was #{stub.inspect}"
+          raise "make_stub should return LibXMLNode or String, was #{stub.inspect}"
         end
       elsif data.kind_of? LibXMLNode
         self.raw_data = data.dump_xml
@@ -144,7 +144,7 @@ module ActiveXML
 
     def each_with_index(symbol = nil)
       unless block_given?
-        raise RuntimeError "use each instead"
+        raise "use each instead"
       end
       index = 0
       nodes = Array.new
@@ -246,10 +246,10 @@ module ActiveXML
 
     def delete_element( elem )
       if elem.kind_of? LibXMLNode
-        raise RuntimeError, "NO GOOD IDEA!" unless self.internal_data.doc == elem.internal_data.doc
+        raise "NO GOOD IDEA!" unless self.internal_data.doc == elem.internal_data.doc
         elem.internal_data.remove!
       elsif elem.kind_of? LibXML::XML::Node
-        raise RuntimeError, "this should be obsolete!!!"
+        raise "this should be obsolete!!!"
         elem.remove!
       else
         e = data.find_first(elem.to_s)
