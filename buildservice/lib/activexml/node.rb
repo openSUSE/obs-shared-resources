@@ -25,7 +25,7 @@ module ActiveXML
       # FIXME: works only for projects/packages, or by overwriting it in the model definition
       # FIXME: could get info somehow from schema, as soon as schema evaluation is built in
       def make_stub(opt)
-        logger.debug "--> creating stub element for #{self.name}, arguments: #{opt.inspect}"
+        #logger.debug "--> creating stub element for #{self.name}, arguments: #{opt.inspect}"
         if opt.nil?
           raise CreationError, "Tried to create document without opt parameter"
         end
@@ -290,7 +290,7 @@ module ActiveXML
     end
 
     def method_missing( symbol, *args, &block )
-      logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
+      #logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
 
       symbols = symbol.to_s
       if( symbols =~ /^each_(.*)$/ )

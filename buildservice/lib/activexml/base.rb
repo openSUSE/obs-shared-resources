@@ -34,7 +34,7 @@ module ActiveXML
       def setup(transport_object)
         super()
         @@transport = transport_object
-        logger.debug "--> ActiveXML successfully set up"
+        #logger.debug "--> ActiveXML successfully set up"
         true
       end
 
@@ -166,7 +166,7 @@ module ActiveXML
     end
 
     def delete(opt={})
-      logger.debug "Delete #{self.class}, opt: #{opt.inspect}"
+      #logger.debug "Delete #{self.class}, opt: #{opt.inspect}"
       transport = TransportMap.transport_for(self.class.name.downcase.to_sym)
       transport.delete self, opt
       Rails.cache.delete @cache_key if @cache_key
