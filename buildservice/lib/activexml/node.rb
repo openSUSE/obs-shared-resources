@@ -362,6 +362,12 @@ module ActiveXML
       _data.before(other.internal_data)
     end
 
+    def move_after other
+      raise "NO GOOD IDEA!" unless _data.document == other.internal_data.document
+      # the naming of the API is a bit strange IMO
+      _data.after(other.internal_data)
+    end
+    
     # stay away from this
     def internal_data #nodoc
       _data
