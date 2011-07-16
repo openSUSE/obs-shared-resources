@@ -53,7 +53,6 @@ module ActiveXML
 
     #instance methods
 
-    attr_reader :data
     attr_accessor :throw_on_method_missing
 
     def initialize( data )
@@ -71,7 +70,7 @@ module ActiveXML
         else
           raise "make_stub should return LibXMLNode or String, was #{stub.inspect}"
         end
-      elsif data.kind_of? LibXMLNode
+      elsif _data.kind_of? LibXMLNode
         @data = data.internal_data.clone
       else
         raise "constructor needs either XML::Node, String or Hash"
@@ -107,14 +106,15 @@ module ActiveXML
     end
 
     def element_name
-      data.name
+      _data.name
     end
 
     def element_name=(name)
-      data.name = name
+      _data.name = name
     end
 
-    def data
+    # remember: this function does not exist!
+    def _data #nodoc
       if !@data && @raw_data
         parse(@raw_data)
         # save memory
@@ -122,15 +122,15 @@ module ActiveXML
       end
       @data
     end
-    private :data
+    private :_data
 
     def text
       #puts 'text -%s- -%s-' % [data.inner_xml, data.content]
-      data.content
+      _data.content
     end
 
     def text= (what)
-      data.content = what.to_xs
+      _data.content = what.to_xs
     end
 
     def each(symbol = nil)
@@ -148,9 +148,9 @@ module ActiveXML
       end
       index = 0
       if symbol.nil?
-        nodes = data.element_children
+        nodes = _data.element_children
       else
-        nodes = data.xpath(symbol.to_s)
+        nodes = _data.xpath(symbol.to_s)
       end
       nodes.each do |e|
         yield create_node_with_relations(e), index
@@ -160,7 +160,7 @@ module ActiveXML
     end
 
     def find_first(symbol)
-      n = data.xpath(symbol.to_s).first
+      n = _data.xpath(symbol.to_s).first
       if n 
         return create_node_with_relations(n)
       else
@@ -174,7 +174,7 @@ module ActiveXML
 
     def to_s
       ret = ''
-      data.children.each do |node|
+      _data.children.each do |node|
         if node.text?
           ret += node.content
         end
@@ -195,25 +195,25 @@ module ActiveXML
       if @data.nil?
         @raw_data
       else
-        data.to_s
+        _data.to_s
       end
     end
 
     def to_param
-      data.attributes['name'].value
+      _data.attributes['name'].value
     end
 
     def add_node(node)
       raise ArgumentError, "argument must be a string" unless node.kind_of? String
       xmlnode = Nokogiri::XML::Document.parse(node, nil, nil, Nokogiri::XML::ParseOptions::STRICT).root
-      data.add_child(xmlnode)
+      _data.add_child(xmlnode)
       xmlnode
     end
 
     def add_element ( element, attrs=nil )
       raise "First argument must be an element name" if element.nil?
-      el = data.document.create_element(element)
-      data.add_child(el)
+      el = _data.document.create_element(element)
+      _data.add_child(el)
       attrs.each do |key, value|
         el[key]=value
       end if attrs.kind_of? Hash
@@ -224,23 +224,23 @@ module ActiveXML
     #query can either be an element name, an xpath, or any object
     #whose to_s method evaluates to an element name or xpath
     def has_element?( query )
-      !data.xpath(query.to_s).empty?
+      !_data.xpath(query.to_s).empty?
     end
 
     def has_elements?
-      return !data.element_children.empty?
+      return !_data.element_children.empty?
     end
 
     def has_attribute?( query )
-      data.attributes.has_key?(query.to_s)
+      _data.attributes.has_key?(query.to_s)
     end
 
     def has_attributes?
-      !data.attribute_nodes.empty?
+      !_data.attribute_nodes.empty?
     end
 
     def delete_attribute( name )
-      data.remove_attribute(name.to_s)
+      _data.remove_attribute(name.to_s)
     end
 
     def delete_element( elem )
@@ -252,7 +252,7 @@ module ActiveXML
         elem.remove
       else
         logger.warn "delete_element called with xpath #{elem}!!"
-        e = data.xpath(elem.to_s)
+        e = _data.xpath(elem.to_s)
         if e.kind_of? Nokogiri::XML::Node
           e.remove
           return
@@ -262,7 +262,7 @@ module ActiveXML
     end
 
     def set_attribute( name, value)
-       data[name] = value
+       _data[name] = value
     end
 
     def create_node_with_relations( element )
@@ -277,15 +277,15 @@ module ActiveXML
     end
 
     def value( symbol ) 
-      return nil unless data
+      return nil unless _data
 
       symbols = symbol.to_s
 
-      if data.attributes.has_key?(symbols)
-        return data.attributes[symbols].value
+      if _data.attributes.has_key?(symbols)
+        return _data.attributes[symbols].value
       end
 
-      elem = data.xpath(symbols)
+      elem = _data.xpath(symbols)
       unless elem.empty?
         return elem.first.inner_text
       end
@@ -295,7 +295,7 @@ module ActiveXML
 
     def find( symbol, &block ) 
        symbols = symbol.to_s
-       data.xpath(symbols).each do |e|
+       _data.xpath(symbols).each do |e|
          block.call(create_node_with_relations(e))
        end 
     end
@@ -304,29 +304,28 @@ module ActiveXML
       #logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
 
       symbols = symbol.to_s
+      raise "data? what is data?" if symbols == "data"
       if( symbols =~ /^each_(.*)$/ )
         elem = $1
         query = args[0]
-        if query
-          elem = "#{elem}[#{query}]"
-        end
+        raise "This really is obsolete!" if query
         return [] if not has_element? elem
         result = Array.new
-        data.xpath(elem).each do |e|
+        _data.xpath(elem).each do |e|
           result << node = create_node_with_relations(e)
           block.call(node) if block
         end
         return result
       end
 
-      return nil unless data
+      return nil unless _data
 
-      if data.attributes[symbols]
-        return data.attributes[symbols].value
+      if _data.attributes[symbols]
+        return _data.attributes[symbols].value
       end
 
       begin
-        datasym = data.xpath(symbols)
+        datasym = _data.xpath(symbols)
       rescue Nokogiri::XML::XPath::SyntaxError
         return unless @throw_on_method_missing
         super( symbol, *args )
@@ -334,13 +333,14 @@ module ActiveXML
       unless datasym.empty?
         datasym = datasym.first
         xpath = args.shift
+	raise "This really is obsolete!" if xpath
         query = xpath ? "#{symbol}[#{xpath}]" : symbols
         #logger.debug "method_missing: query is '#{query}'"
         if @node_cache[query]
           node = @node_cache[query]
           #logger.debug "taking from cache: #{node.inspect.to_s.slice(0..100)}"
         else
-          e = data.xpath(query)
+          e = _data.xpath(query)
           return nil if e.empty?
 
           node = create_node_with_relations(e.first)
@@ -356,7 +356,7 @@ module ActiveXML
 
     # stay away from this
     def internal_data #nodoc
-      data
+      _data
     end
     protected :internal_data
   end
