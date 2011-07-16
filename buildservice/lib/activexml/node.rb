@@ -215,7 +215,7 @@ module ActiveXML
       el = _data.document.create_element(element)
       _data.add_child(el)
       attrs.each do |key, value|
-        el[key]=value
+        el[key.to_s]=value.to_s
       end if attrs.kind_of? Hash
       LibXMLNode.new(el)
     end
@@ -245,19 +245,16 @@ module ActiveXML
 
     def delete_element( elem )
       if elem.kind_of? LibXMLNode
-        raise "NO GOOD IDEA!" unless self.internal_data.document == elem.internal_data.document
+        raise "NO GOOD IDEA!" unless self._data.document == elem.internal_data.document
         elem.internal_data.remove
       elsif elem.kind_of? Nokogiri::XML::Node
         raise "this should be obsolete!!!"
         elem.remove
       else
-        logger.warn "delete_element called with xpath #{elem}!!"
-        e = _data.xpath(elem.to_s)
-        if e.kind_of? Nokogiri::XML::Node
-          e.remove
-          return
-        end
-        raise RuntimeError, "this should be obsolete!!!"
+        s = _data.xpath(elem.to_s)
+	raise "this was supposed to return sets" unless s.kind_of? Nokogiri::XML::NodeSet
+        raise "xpath for delete did not give exactly one node!" unless s.length == 1
+        s.first.remove
       end
     end
 
@@ -352,6 +349,17 @@ module ActiveXML
 
       return unless @throw_on_method_missing
       super( symbol, *args )
+    end
+
+    def == other
+       return false unless other
+       _data == other.internal_data
+    end
+
+    def move_after other
+      raise "NO GOOD IDEA!" unless _data.document == other.internal_data.document	    
+      # the naming of the API is a bit strange IMO
+      _data.before(other.internal_data)
     end
 
     # stay away from this
