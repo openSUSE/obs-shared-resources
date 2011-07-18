@@ -173,6 +173,7 @@ module ActiveXML
     end
 
     def to_s
+      #raise "to_s is obsolete #{self.inspect}"
       ret = ''
       _data.children.each do |node|
         if node.text?
@@ -362,7 +363,7 @@ module ActiveXML
       _data.before(other.internal_data)
     end
 
-    def move_after other
+    def move_before other
       raise "NO GOOD IDEA!" unless _data.document == other.internal_data.document
       # the naming of the API is a bit strange IMO
       _data.after(other.internal_data)
