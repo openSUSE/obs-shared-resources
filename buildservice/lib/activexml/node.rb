@@ -245,7 +245,7 @@ module ActiveXML
 
     def delete_element( elem )
       if elem.kind_of? LibXMLNode
-        raise "NO GOOD IDEA!" unless self._data.document == elem.internal_data.document
+        raise "NO GOOD IDEA!" unless _data.document == elem.internal_data.document
         elem.internal_data.remove
       elsif elem.kind_of? Nokogiri::XML::Node
         raise "this should be obsolete!!!"
