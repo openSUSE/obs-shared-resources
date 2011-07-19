@@ -78,6 +78,7 @@ module ActiveXML
 
       @throw_on_method_missing = true
       @node_cache = {}
+      @value_cache = {}
     end
 
     def parse(data)
@@ -160,12 +161,17 @@ module ActiveXML
     end
 
     def find_first(symbol)
-      n = _data.xpath(symbol.to_s).first
-      if n 
-        return create_node_with_relations(n)
-      else
-        return nil
-      end
+       symbol = symbol.to_s
+       if @node_cache.has_key?(symbol)
+          return @node_cache[symbol]
+       else
+          e = _data.xpath(symbol)
+          if e.empty?
+            return @node_cache[symbol] = nil
+          end
+          node = create_node_with_relations(e.first)
+          @node_cache[symbol] = node
+       end
     end
 
     def logger
@@ -218,6 +224,9 @@ module ActiveXML
       attrs.each do |key, value|
         el[key.to_s]=value.to_s
       end if attrs.kind_of? Hash
+      # you never know
+      @node_cache = {}
+      @value_cache = {}
       LibXMLNode.new(el)
     end
 
@@ -225,7 +234,7 @@ module ActiveXML
     #query can either be an element name, an xpath, or any object
     #whose to_s method evaluates to an element name or xpath
     def has_element?( query )
-      !_data.xpath(query.to_s).empty?
+      !find_first( query ).nil?
     end
 
     def has_elements?
@@ -257,6 +266,9 @@ module ActiveXML
         raise "xpath for delete did not give exactly one node!" unless s.length == 1
         s.first.remove
       end
+      # you never know
+      @node_cache = {}
+      @value_cache = {}
     end
 
     def set_attribute( name, value)
@@ -279,16 +291,18 @@ module ActiveXML
 
       symbols = symbol.to_s
 
+      return @value_cache[symbols] if @value_cache.has_key?(symbols)
+
       if _data.attributes.has_key?(symbols)
-        return _data.attributes[symbols].value
+        return @value_cache[symbols] = _data.attributes[symbols].value
       end
 
       elem = _data.xpath(symbols)
       unless elem.empty?
-        return elem.first.inner_text
+        return @value_cache[symbols] = elem.first.inner_text
       end
 
-      return nil
+      return @value_cache[symbols] = nil
     end
 
     def find( symbol, &block ) 
@@ -299,14 +313,11 @@ module ActiveXML
     end
 
     def method_missing( symbol, *args, &block )
-      #logger.debug "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
+      #puts "called method: #{symbol}(#{args.map do |a| a.inspect end.join ', '})"
 
       symbols = symbol.to_s
-      raise "data? what is data?" if symbols == "data"
       if( symbols =~ /^each_(.*)$/ )
         elem = $1
-        query = args[0]
-        raise "This really is obsolete!" if query
         return [] if not has_element? elem
         result = Array.new
         _data.xpath(elem).each do |e|
@@ -322,34 +333,8 @@ module ActiveXML
         return _data.attributes[symbols].value
       end
 
-      begin
-        datasym = _data.xpath(symbols)
-      rescue Nokogiri::XML::XPath::SyntaxError
-        return unless @throw_on_method_missing
-        super( symbol, *args )
-      end
-      unless datasym.empty?
-        datasym = datasym.first
-        xpath = args.shift
-	raise "This really is obsolete!" if xpath
-        query = xpath ? "#{symbol}[#{xpath}]" : symbols
-        #logger.debug "method_missing: query is '#{query}'"
-        if @node_cache[query]
-          node = @node_cache[query]
-          #logger.debug "taking from cache: #{node.inspect.to_s.slice(0..100)}"
-        else
-          e = _data.xpath(query)
-          return nil if e.empty?
-
-          node = create_node_with_relations(e.first)
-
-          @node_cache[query] = node
-        end
-        return node
-      end
-
-      return unless @throw_on_method_missing
-      super( symbol, *args )
+#      puts "method_missing bouncing to find_first #{symbols}"
+      find_first(symbols)
     end
 
     def == other
