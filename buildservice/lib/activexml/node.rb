@@ -77,8 +77,7 @@ module ActiveXML
       end
 
       @throw_on_method_missing = true
-      @node_cache = {}
-      @value_cache = {}
+      cleanup_cache
     end
 
     def parse(data)
@@ -227,9 +226,19 @@ module ActiveXML
         el[key.to_s]=value.to_s
       end if attrs.kind_of? Hash
       # you never know
+      cleanup_cache
+      LibXMLNode.new(el)
+    end
+
+    def cleanup_cache
       @node_cache = {}
       @value_cache = {}
-      LibXMLNode.new(el)
+    end
+
+    def clone
+      ret = super
+      ret.cleanup_cache
+      ret
     end
 
     #tests if a child element exists matching the given query.
@@ -269,8 +278,7 @@ module ActiveXML
         s.first.remove
       end
       # you never know
-      @node_cache = {}
-      @value_cache = {}
+      cleanup_cache
     end
 
     def set_attribute( name, value)
